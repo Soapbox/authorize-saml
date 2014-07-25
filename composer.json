@@ -1,0 +1,34 @@
+{
+    "name": "soapbox/authorize-saml",
+    "description": "SAML authroization strategy for SoapBox/Authorize",
+    "keywords": ["authentication", "saml", "sso"],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Jaspaul Bola",
+            "email": "jaspaul.b@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://raw.github.com/Jaspaul/simplesamlphp-composer/master"
+        },
+        {
+            "type": "vcs",
+            "url":  "git@github.com:soapbox/authorize.git"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "soapbox/authorize": "dev-master",
+        "illuminate/support": "4.2.*",
+        "simplesamlphp/simplesamlphp": "1.12.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Soapbox\\AuthorizeSaml\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
