@@ -27,6 +27,15 @@ to function
 )
 ```
 
+### Configure Web Server
+```
+<VirutalHost *>
+	...
+
+	Alias /simplesaml /path/to/project/vendor/soapbox/authorize-saml/src/SoapBox/AuthorizeSaml/Libraries/SimpleSAMLphp/www
+</VirtualHost>
+```
+
 ## Usage
 
 ### Login
