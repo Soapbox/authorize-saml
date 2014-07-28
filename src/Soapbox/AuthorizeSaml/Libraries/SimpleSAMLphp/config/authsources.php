@@ -1,5 +1,5 @@
 <?php
 
-require_once('../../../SamlStrategy.php');
+require_once(__DIR__ . '/../../../SamlStrategy.php');
 
-$config = SamlStrategy::$settings;
+$config = SoapBox\AuthorizeSaml\SamlStrategy::$settings;
