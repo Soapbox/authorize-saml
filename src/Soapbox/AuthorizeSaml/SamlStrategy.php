@@ -8,16 +8,47 @@ use SoapBox\Authorize\Strategies\SingleSignOnStrategy;
 class SamlStrategy extends SingleSignOnStrategy {
 
 	/**
-	 * The url to redirect the user to after they have granted permissions on
-	 * SAML.
+	 * Static array of settings configured for SimpleSAMLphp to import.
+	 *
+	 * @var array [
+	 *		'sp' => [
+	 *			'saml:SP',
+	 *			'entityID' => 'http://dev.soapbox.co',
+	 *			'idp' => 'https://openidp.feide.no',
+	 *			'discoURL' => NULL,
+	 *			'NameIDPolicy' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+	 *		]
+	 *	]
+	 */
+	public static $settings = [];
+
+	/**
+	 * Static array of metadata configured for SimpleSAMLphp to import.
+	 *
+	 * @var array [
+	 *		'https://openidp.feide.no' => [
+	 *			'name' => [
+	 *				'en' => 'Feide OpenIdP - guest users',
+	 *				'no' => 'Feide Gjestebrukere',
+	 *			],
+	 *			'description'          => 'Here you can login with your account on Feide RnD OpenID. If you do not already have an account on this identity provider, you can create a new one by following the create new account link and follow the instructions.',
+	 *			'SingleSignOnService'  => 'https://openidp.feide.no/simplesaml/saml2/idp/SSOService.php',
+	 *			'SingleLogoutService'  => 'https://openidp.feide.no/simplesaml/saml2/idp/SingleLogoutService.php',
+	 *			'certFingerprint'      => 'c9ed4dfb07caf13fc21e0fec1572047eb8a7a4cb'
+	 *		]
+	 *	]
+	 */
+	public static $metadata = [];
+
+	/**
+	 * The url to redirect to after the sign in process was successful
 	 *
 	 * @var string
 	 */
 	private $redirectUrl = '';
 
 	/**
-	 * The url to redirect the user if there was an error authenticating with
-	 * SAML.
+	 * The url to reidrect to if the sign in process fails
 	 *
 	 * @var string
 	 */
@@ -51,18 +82,24 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 * @param array $settings ...
 	 */
 	public function __construct($settings = array()) {
-		if (!isset($settings['id']) ||
+		if (!isset($settings['configuration']) ||
+			!isset($settings['metadata']) ||
 			!isset($settings['redirect_url']) ||
 			!isset($settings['error_url'])) {
 			throw new \Exception(
-				'An id, redirect_url, error_url are requried to use SAML login'
+				'configuration, metadata, redirect_url, and error_url parameters are required for SAML support'
 			);
 		}
 
-		//Export settings for config.php, authsources.php, and saml20-idp-remote
-		dd($config);
+		SamlStrategy::$settings = [
+			'sp' => $settings['configuration']
+		];
 
-		$this->saml = new SimpleSAML_Auth_Simple($settings['id']);
+		SamlStrategy::$metadata = [
+			$settings['configuration']['idp'] => $settings['metadata']
+		];
+
+		$this->saml = new SimpleSAML_Auth_Simple('sp');
 		$this->saml->requireAuth();
 
 		$this->redirectUrl = $settings['redirect_url'];
