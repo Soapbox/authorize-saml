@@ -11,10 +11,6 @@
     ],
     "repositories": [
         {
-            "type": "composer",
-            "url": "https://raw.github.com/Jaspaul/simplesamlphp-composer/master"
-        },
-        {
             "type": "vcs",
             "url":  "git@github.com:soapbox/authorize.git"
         }
@@ -22,8 +18,7 @@
     "require": {
         "php": ">=5.4.0",
         "soapbox/authorize": "dev-master",
-        "illuminate/support": "4.2.*",
-        "simplesamlphp/simplesamlphp": "1.12.*"
+        "illuminate/support": "4.2.*"
     },
     "autoload": {
         "psr-0": {
