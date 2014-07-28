@@ -1,6 +1,7 @@
-<?php namespace Soapbox\AuthorizeSaml;
+<?php namespace SoapBox\AuthorizeSaml;
 
 use Illuminate\Support\ServiceProvider;
+use SoapBox\Authorize\StrategyFactory;
 
 class AuthorizeSamlServiceProvider extends ServiceProvider {
 
@@ -28,7 +29,7 @@ class AuthorizeSamlServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		StrategyFactory::register('saml', 'SoapBox\AuthorizeSaml\SamlStrategy');
 	}
 
 	/**
