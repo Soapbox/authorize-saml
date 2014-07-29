@@ -1,6 +1,6 @@
 <?php namespace SoapBox\AuthorizeSaml;
 
-require(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
+require_once(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
 
 use SoapBox\Authorize\Helpers;
 use SoapBox\Authorize\User;
@@ -87,21 +87,22 @@ class SamlStrategy extends SingleSignOnStrategy {
 		if (!isset($settings['configuration']) ||
 			!isset($settings['metadata']) ||
 			!isset($settings['redirect_url']) ||
-			!isset($settings['error_url'])) {
+			!isset($settings['error_url']) ||
+			!isset($settings['sp_key'])) {
 			throw new \Exception(
 				'configuration, metadata, redirect_url, and error_url parameters are required for SAML support'
 			);
 		}
 
 		SamlStrategy::$settings = [
-			'sp' => $settings['configuration']
+			$settings['sp_key'] => $settings['configuration']
 		];
 
 		SamlStrategy::$metadata = [
 			$settings['configuration']['idp'] => $settings['metadata']
 		];
 
-		$this->saml = new \SimpleSAML_Auth_Simple('sp');
+		$this->saml = new \SimpleSAML_Auth_Simple($settings['sp_key']);
 		$this->saml->requireAuth();
 
 		$this->redirectUrl = $settings['redirect_url'];
