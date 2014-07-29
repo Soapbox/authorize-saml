@@ -56,6 +56,8 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 */
 	private $errorUrl = '';
 
+	private $urls = array();
+
 	/**
 	 * The SAML instance
 	 *
@@ -102,8 +104,9 @@ class SamlStrategy extends SingleSignOnStrategy {
 			$settings['configuration']['idp'] => $settings['metadata']
 		];
 
+		$this->entityId = $settings['configuration']['entityID'];
+
 		$this->saml = new \SimpleSAML_Auth_Simple($settings['sp_key']);
-		$this->saml->requireAuth();
 
 		$this->redirectUrl = $settings['redirect_url'];
 		$this->errorUrl = $settings['error_url'];
@@ -120,6 +123,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 * @return User A mixed array representing the authenticated user.
 	 */
 	public function login($parameters = array()) {
+		$this->saml->requireAuth();
 		if (!$this->saml->isAuthenticated()) {
 			$this->saml->login([
 				'ErrorURL' => $this->errorUrl,
@@ -142,6 +146,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 * @return User A mixed array representing the authenticated user.
 	 */
 	public function getUser($parameters = array()) {
+		$this->saml->requireAuth();
 		if (!$this->saml->isAuthenticated()) {
 			return $this->login($parameters);
 		}
@@ -151,13 +156,13 @@ class SamlStrategy extends SingleSignOnStrategy {
 		} catch (\Exception $ex) {
 			throw new AuthenticationException();
 		}
-
+dd($attributes);
 		$user = new User;
 
 		if (isset($parameters['email'])) {
 			$user->email = $this->getValueOrDefault($attributes[$parameters['email']][0], '');
 		} else {
-			$name_id = $as->getAuthData('saml:sp:NameID');
+			$name_id = $attributes->getAuthData('saml:sp:NameID');
 			$user->email = $name_id['Value'];
 		}
 
@@ -176,6 +181,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 *	validate our user.
 	 */
 	public function endpoint() {
+		$this->saml->requireAuth();
 		return $this->login();
 	}
 

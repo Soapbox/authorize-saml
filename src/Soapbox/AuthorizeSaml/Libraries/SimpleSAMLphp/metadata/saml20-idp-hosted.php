@@ -30,7 +30,7 @@ $metadata['__DYNAMIC:1__'] = array(
 	 * Currently, simpleSAMLphp defaults to SHA-1, which has been deprecated since
 	 * 2011, and will be disallowed by NIST as of 2014. Please refer to the following
 	 * document for more information:
-	 * 
+	 *
 	 * http://csrc.nist.gov/publications/nistpubs/800-131A/sp800-131A.pdf
 	 *
 	 * If you are uncertain about service providers supporting SHA-256 or other
