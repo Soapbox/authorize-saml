@@ -156,7 +156,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 		} catch (\Exception $ex) {
 			throw new AuthenticationException();
 		}
-dd($attributes);
+
 		$user = new User;
 
 		if (isset($parameters['email'])) {
@@ -166,7 +166,7 @@ dd($attributes);
 			$user->email = $name_id['Value'];
 		}
 
-		$user->id = $this->getValueOrDefault($attributes[$paramters['id']][0], '');
+		$user->id = $this->getValueOrDefault($attributes[$parameters['id']][0], '');
 		$user->firstname = $this->getValueOrDefault($attributes[$parameters['firstname']][0], '');
 		$user->lastname = $this->getValueOrDefault($attributes[$parameters['lastname']][0], '');
 
