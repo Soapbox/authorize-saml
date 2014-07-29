@@ -180,9 +180,9 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 * @return array Mixed array of the tokens and other components that
 	 *	validate our user.
 	 */
-	public function endpoint() {
+	public function endpoint($parameters = []) {
 		$this->saml->requireAuth();
-		return $this->login();
+		return $this->login($parameters);
 	}
 
 	public function metadata($sourceId = 'dope-sp') {
