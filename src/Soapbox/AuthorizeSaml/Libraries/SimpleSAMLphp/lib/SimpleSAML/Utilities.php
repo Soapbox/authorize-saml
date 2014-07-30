@@ -42,7 +42,7 @@ class SimpleSAML_Utilities {
 		return substr($url, $start, $length);
 
 	}
-	
+
 	/**
 	 * Retrieve Host value from $_SERVER environment variables
 	 */
@@ -83,7 +83,7 @@ class SimpleSAML_Utilities {
 		return substr($url, 0, $length);
 	}
 
-	
+
 	/**
 	 * This function checks if we should set a secure cookie.
 	 *
@@ -153,14 +153,14 @@ class SimpleSAML_Utilities {
 	 * Will return https://sp.example.org/universities/ruc/baz/simplesaml/saml2/SSOService.php
 	 */
 	public static function selfURLNoQuery() {
-	
+
 		$selfURLhost = self::selfURLhost();
 		$selfURLhost .= $_SERVER['SCRIPT_NAME'];
 		if (isset($_SERVER['PATH_INFO'])) {
 			$selfURLhost .= $_SERVER['PATH_INFO'];
 		}
 		return $selfURLhost;
-	
+
 	}
 
 
@@ -171,25 +171,25 @@ class SimpleSAML_Utilities {
 	 * SP, as defined in the global configuration.
 	 */
 	public static function getSelfHostWithPath() {
-	
+
 		$baseurl = explode("/", self::getBaseURL());
 		$elements = array_slice($baseurl, 3 - count($baseurl), count($baseurl) - 4);
 		$path = implode("/", $elements);
 		$selfhostwithpath = self::getSelfHost();
 		return $selfhostwithpath . "/" . $path;
 	}
-	
+
 	/**
 	 * Will return foo
 	 */
 	public static function getFirstPathElement($trailingslash = true) {
-	
+
 		if (preg_match('|^/(.*?)/|', $_SERVER['SCRIPT_NAME'], $matches)) {
 			return ($trailingslash ? '/' : '') . $matches[1];
 		}
 		return '';
 	}
-	
+
 
 	public static function selfURL() {
 
@@ -221,7 +221,7 @@ class SimpleSAML_Utilities {
 
 		$globalConfig = SimpleSAML_Configuration::getInstance();
 		$baseURL = $globalConfig->getString('baseurlpath', 'simplesaml/');
-		
+
 		if (preg_match('#^https?://.*/$#D', $baseURL, $matches)) {
 			/* full URL in baseurlpath, override local server values */
 			return $baseURL;
@@ -367,7 +367,7 @@ class SimpleSAML_Utilities {
 
 	public static function checkDateConditions($start=NULL, $end=NULL) {
 		$currentTime = time();
-	
+
 		if (!empty($start)) {
 			$startTime = SAML2_Utils::xsDateTimeToTimestamp($start);
 			/* Allow for a 10 minute difference in Time */
@@ -388,7 +388,7 @@ class SimpleSAML_Utilities {
 	public static function generateID() {
 		return '_' . self::stringToHex(self::generateRandomBytes(21));
 	}
-	
+
 
 	/**
 	 * This function generates a timestamp on the form used by the SAML protocols.
@@ -613,7 +613,7 @@ class SimpleSAML_Utilities {
 
 		/* End script execution. */
 		exit;
-	} 
+	}
 
 
 	/**
@@ -648,14 +648,14 @@ class SimpleSAML_Utilities {
 	 */
 	public static function redirect($url, $parameters = array(),
 		$allowed_redirect_hosts = NULL) {
-		
+
 		assert(is_string($url));
 		assert(strlen($url) > 0);
 		assert(is_array($parameters));
 
 		$url = self::normalizeURL($url);
 		if ($allowed_redirect_hosts !== NULL) {
-			$url = self::checkURLAllowed($url, $allowed_redirect_hosts);	
+			$url = self::checkURLAllowed($url, $allowed_redirect_hosts);
 		}
 		self::_doRedirect($url, $parameters);
 	}
@@ -700,7 +700,7 @@ class SimpleSAML_Utilities {
 	 * trusted, an exception will be thrown.
 	 *
 	 * See the redirectTrustedURL function for more details.
-	 * 
+	 *
 	 * @return void This function never returns.
 	 */
 	public static function redirectUntrustedURL($url, $parameters = array()) {
@@ -1034,7 +1034,7 @@ class SimpleSAML_Utilities {
      * @return string A string of $length random bytes.
      */
     public static function generateRandomBytesMTrand($length) {
-	
+
 		/* Use mt_rand to generate $length random bytes. */
 		$data = '';
 		for($i = 0; $i < $length; $i++) {
