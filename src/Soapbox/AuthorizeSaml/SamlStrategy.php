@@ -175,6 +175,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 		$user->id = $this->getValueOrDefault($attributes[$parameters['id']][0], '');
 		$user->firstname = $this->getValueOrDefault($attributes[$parameters['firstname']][0], '');
 		$user->lastname = $this->getValueOrDefault($attributes[$parameters['lastname']][0], '');
+		$user->accessToken = 'accessToken';
 
 		return $user;
 	}
