@@ -1,4 +1,4 @@
-# Authorize-Facebook
+# Authorize-SAML
 [Authorize](http://github.com/soapbox/authorize) strategy for SAML authentication.
 
 ## Getting Started
