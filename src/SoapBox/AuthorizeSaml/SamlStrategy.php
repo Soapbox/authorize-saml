@@ -218,7 +218,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 		$user->accessToken = 'accessToken';
 
 		foreach ($fields as $key => $value) {
-			$user->custom[$key] = Helpers::getValueOrDefault($attributes[$fields[$value]], '', 0);
+			$user->custom[$key] = Helpers::getValueOrDefault($attributes[$value], '', 0);
 		}
 
 		return $user;
