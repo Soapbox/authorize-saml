@@ -4,112 +4,26 @@ require_once(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
 
 class SamlHelpers {
 
-	private static function requireOwnership($metadata, $userid) {
-		if (!isset($metadata['owner'])) {
-			throw new Exception(
-				'Metadata has no owner. Which means no one is granted access, not even you.'
-			);
-		}
-
-		if ($metadata['owner'] !== $userid) {
-			throw new Exception(
-				'Metadata has an owner that is not equal to your userid, hence you are not granted access.'
-			);
-		}
-	}
-
-	public static function parseMetadata($xml) {
-		/* Load simpleSAMLphp, configuration and metadata */
+	public static function parseMetadata($xmldata) {
 		$config = \SimpleSAML_Configuration::getInstance();
-		$metaconfig = \SimpleSAML_Configuration::getConfig('module_metaedit.php');
 
-		$mdh = new \SimpleSAML_Metadata_MetaDataStorageHandlerSerialize(
-			$metaconfig->getValue('metahandlerConfig', null)
-		);
+		\SimpleSAML_Utilities::validateXMLDocument($xmldata, 'saml-meta');
+		$entities = \SimpleSAML_Metadata_SAMLParser::parseDescriptorsString($xmldata);
 
-		$authsource = $metaconfig->getValue('auth', 'login-admin');
-		$useridattr = $metaconfig->getValue('useridattr', 'eduPersonPrincipalName');
-
-		$as = new SimpleSAML_Auth_Simple($authsource);
-		$as->requireAuth();
-
-		$attributes = $as->getAttributes();
-
-		// Check if userid exists
-		if (!isset($attributes[$useridattr])) {
-			throw new Exception('User ID is missing');
-		}
-
-		$userid = $attributes[$useridattr][0];
-
-		if (array_key_exists('entityid', $_REQUEST)) {
-
-			$metadata = $mdh->getMetadata($_REQUEST['entityid'], 'saml20-sp-remote');
-			SamlHelpers::requireOwnership($metadata, $userid);
-
-		} else if (array_key_exists('xmlmetadata', $_REQUEST)) {
-
-			$xmldata = $_REQUEST['xmlmetadata'];
-			\SimpleSAML_Utilities::validateXMLDocument($xmldata, 'saml-meta');
-			$entities = \SimpleSAML_Metadata_SAMLParser::parseDescriptorsString($xmldata);
-			$entity = array_pop($entities);
-			$metadata =  $entity->getMetadata20SP();
-
-			/* Trim metadata endpoint arrays. */
-			$metadata['AssertionConsumerService'] =
-				array(\SimpleSAML_Utilities::getDefaultEndpoint(
-					$metadata['AssertionConsumerService'],
-					array(\SAML2_Const::BINDING_HTTP_POST)
-				));
-
-			$metadata['SingleLogoutService'] =
-				array(\SimpleSAML_Utilities::getDefaultEndpoint(
-					$metadata['SingleLogoutService'],
-					array(\SAML2_Const::BINDING_HTTP_REDIRECT)
-				));
-
-		} else {
-			$metadata = array(
-				'owner' => $userid,
+		/* Get all metadata for the entities. */
+		foreach ($entities as &$entity) {
+			$entity = array(
+				'shib13-sp-remote' => $entity->getMetadata1xSP(),
+				'shib13-idp-remote' => $entity->getMetadata1xIdP(),
+				'saml20-sp-remote' => $entity->getMetadata20SP(),
+				'saml20-idp-remote' => $entity->getMetadata20IdP(),
 			);
 		}
 
-		$editor = new \sspmod_metaedit_MetaEditor();
+		/* Transpose from $entities[entityid][type] to $output[type][entityid]. */
+		$output = \SimpleSAML_Utilities::transposeArray($entities);
 
-		if (isset($_POST['submit'])) {
-			$editor->checkForm($_POST);
-			$metadata = $editor->formToMeta($_POST, array(), array('owner' => $userid));
-
-			if (isset($_REQUEST['was-entityid']) && $_REQUEST['was-entityid'] !== $metadata['entityid']) {
-				$premetadata = $mdh->getMetadata($_REQUEST['was-entityid'], 'saml20-sp-remote');
-				SamlHelpers::requireOwnership($premetadata, $userid);
-				$mdh->deleteMetadata($_REQUEST['was-entityid'], 'saml20-sp-remote');
-			}
-
-			$testmetadata = null;
-
-			try {
-				$testmetadata = $mdh->getMetadata($metadata['entityid'], 'saml20-sp-remote');
-			} catch(Exception $e) {
-				dd();
-			}
-
-			if ($testmetadata) {
-				SamlHelpers::requireOwnership($testmetadata, $userid);
-			}
-
-			$mdh->saveMetadata($metadata['entityid'], 'saml20-sp-remote', $metadata);
-
-			$template = new \SimpleSAML_XHTML_Template($config, 'metaedit:saved.php');
-			$template->show();
-			exit;
-		}
-
-		$form = $editor->metaToForm($metadata);
-
-		$template = new \SimpleSAML_XHTML_Template($config, 'metaedit:formedit.php');
-		$template->data['form'] = $form;
-		$template->show();
+		return $output['saml20-idp-remote'];
 	}
 
 

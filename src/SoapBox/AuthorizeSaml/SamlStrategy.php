@@ -126,7 +126,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 				$settings['configuration']['idp'] => $settings['metadata']
 			];
 		} else {
-			SamlStrategy::$metadata = SamlHelpers::parseMetadata($settings['metadata']);
+			SamlStrategy::$metadata = SamlHelpers::parseMetadata($settings['metadata'], 'saml20-idp-remote');
 		}
 
 		SamlStrategy::$urls = [
