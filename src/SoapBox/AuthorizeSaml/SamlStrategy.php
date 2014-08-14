@@ -105,8 +105,11 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 *
 	 * @param mixed[] $settings The configurations required by this SAML
 	 *	strategy to authorize the user.
+	 * @param callable $store A callback that will store a KVP (Key Value Pair).
+	 * @param callable $load A callback that will return a value stored with the
+	 *	provided key.
 	 */
-	public function __construct($settings = array()) {
+	public function __construct($settings = array(), $store = null, $load = null) {
 		if (!isset($settings['configuration']) ||
 			!isset($settings['metadata'])      ||
 			!isset($settings['redirect_url'])  ||
