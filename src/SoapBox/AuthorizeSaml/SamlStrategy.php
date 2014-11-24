@@ -202,7 +202,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 		try {
 			$attributes = $this->saml->getAttributes();
 		} catch (\Exception $ex) {
-			throw new AuthenticationException();
+			throw new AuthenticationException(null, 0, $ex);
 		}
 
 		$fields = $parameters['parameters_map'];
