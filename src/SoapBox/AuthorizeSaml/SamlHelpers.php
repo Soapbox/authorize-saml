@@ -4,83 +4,6 @@ require_once(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
 
 class SamlHelpers {
 
-	public static function getServerPort() {
-
-		if (isset($_SERVER["SERVER_PORT"])) {
-			$portnumber = $_SERVER["SERVER_PORT"];
-		} else {
-			$portnumber = 80;
-		}
-		$port = ':' . $portnumber;
-
-		if (self::getServerHTTPS()) {
-			if ($portnumber == '443') $port = '';
-		} else {
-			if ($portnumber == '80') $port = '';
-		}
-
-		return $port;
-
-	}
-
-	public static function getServerHTTPS() {
-
-		if(!array_key_exists('HTTPS', $_SERVER)) {
-			/* Not an https-request. */
-			return FALSE;
-		}
-
-		if($_SERVER['HTTPS'] === 'off') {
-			/* IIS with HTTPS off. */
-			return FALSE;
-		}
-
-		/* Otherwise, HTTPS will be a non-empty string. */
-		return $_SERVER['HTTPS'] !== '';
-
-	}
-
-	public static function getServerHost() {
-
-		if (array_key_exists('HTTP_HOST', $_SERVER)) {
-			$currenthost = $_SERVER['HTTP_HOST'];
-		} elseif (array_key_exists('SERVER_NAME', $_SERVER)) {
-			$currenthost = $_SERVER['SERVER_NAME'];
-		} else {
-			/* Almost certainly not what you want, but ... */
-			$currenthost = 'localhost';
-		}
-
-		if(strstr($currenthost, ":")) {
-				$currenthostdecomposed = explode(":", $currenthost);
-				$port = array_pop($currenthostdecomposed);
-				if (!is_numeric($port)) {
-					array_push($currenthostdecomposed, $port);
-                }
-                $currenthost = implode($currenthostdecomposed, ":");
-		}
-		return $currenthost;
-
-	}
-
-	public static function getBaseUrl() {
-		if (self::getServerHTTPS()) {
-			$protocol = 'https://';
-		} else {
-			$protocol = 'http://';
-		}
-
-		$hostname = self::getServerHost();
-		$port = self::getServerPort();
-		$path = '/provider/saml';
-
-		return $protocol.$hostname.$port.$path;
-	}
-
-	public static function getUrl($sourceId, $endpoint) {
-		return self::getBaseUrl() . '/' . $sourceId . '/' . $endpoint;
-	}
-
 	public static function parseMetadata($xmldata) {
 		$config = \SimpleSAML_Configuration::getInstance();
 
@@ -133,8 +56,7 @@ class SamlHelpers {
 		);
 
 		$slob = $spconfig->getArray('SingleLogoutServiceBinding', $slosvcdefault);
-		//$slol = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
-		$slol = self::getUrl($sourceId, 'logout');
+		$slol = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
 
 		foreach ($slob as $binding) {
 			if ($binding == \SAML2_Const::BINDING_SOAP && !($store instanceof \SimpleSAML_Store_SQL)) {
@@ -171,30 +93,25 @@ class SamlHelpers {
 			switch ($services) {
 				case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST':
 					$acsArray['Binding'] = \SAML2_Const::BINDING_HTTP_POST;
-					//$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
-					$acsArray['Location'] = self::getUrl($sourceId, 'acs');
+					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:1.0:profiles:browser-post':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:1.0:profiles:browser-post';
-					//$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml1-acs.php/' . $sourceId);
-					$acsArray['Location'] = self::getUrl($sourceId, 'acs');
+					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml1-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact';
-					//$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
-					$acsArray['Location'] = self::getUrl($sourceId, 'acs');
+					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:1.0:profiles:artifact-01':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:1.0:profiles:artifact-01';
-					// $acsArray['Location'] = \SimpleSAML_Module::getModuleURL(
-					// 	'saml/sp/saml1-acs.php/' . $sourceId . '/artifact'
-					// );
-					$acsArray['Location'] = self::getUrl($sourceId, 'acs');
+					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL(
+						'saml/sp/saml1-acs.php/' . $sourceId . '/artifact'
+					);
 					break;
 				case 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser';
-					//$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
-					$acsArray['Location'] = self::getUrl($sourceId, 'acs');
+					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
 					$acsArray['hoksso:ProtocolBinding'] = \SAML2_Const::BINDING_HTTP_REDIRECT;
 					break;
 			}
