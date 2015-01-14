@@ -211,11 +211,16 @@ class SamlStrategy extends SingleSignOnStrategy {
 		if (isset($fields['email'])) {
 			$user->email = Helpers::getValueOrDefault($attributes[$fields['email']], '', 0);
 		} else {
-			$name_id = $attributes->getAuthData('saml:sp:NameID');
+			$name_id = $this->saml->getAuthData('saml:sp:NameID');
 			$user->email = $name_id['Value'];
 		}
 
-		$user->id = Helpers::getValueOrDefault($attributes[$fields['id']], '', 0);
+		if (!isset($fields['id'])) {
+			$user->id = $user->email;
+		} else {
+			$user->id = Helpers::getValueOrDefault($attributes[$fields['id']], '', 0);
+		}
+
 		$user->firstname = Helpers::getValueOrDefault($attributes[$fields['firstname']], '', 0);
 		$user->lastname = Helpers::getValueOrDefault($attributes[$fields['lastname']], '', 0);
 		$user->accessToken = 'accessToken';
