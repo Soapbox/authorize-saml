@@ -64,7 +64,7 @@ class SamlHelpers {
 	}
 
 	public static function getBaseUrl() {
-		if (self::::getServerHTTPS()) {
+		if (self::getServerHTTPS()) {
 			$protocol = 'https://';
 		} else {
 			$protocol = 'http://';
