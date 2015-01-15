@@ -91,6 +91,8 @@ class SimpleSAML_Utilities {
 	 */
 	public static function isHTTPS() {
 
+		return TRUE;
+
 		$url = self::getBaseURL();
 
 		$end = strpos($url,'://');
@@ -108,6 +110,8 @@ class SimpleSAML_Utilities {
 	 * retrieve HTTPS status from $_SERVER environment variables
 	 */
 	private static function getServerHTTPS() {
+
+		return TRUE;
 
 		if(!array_key_exists('HTTPS', $_SERVER)) {
 			/* Not an https-request. */
@@ -131,6 +135,8 @@ class SimpleSAML_Utilities {
 	 * protocol default port, otherwise returns an empty string
 	 */
 	private static function getServerPort() {
+
+		return '';
 
 		if (isset($_SERVER["SERVER_PORT"])) {
 			$portnumber = $_SERVER["SERVER_PORT"];
