@@ -275,6 +275,8 @@ class SamlHelpers {
 		} else {
 			header('Content-Type: application/samlmetadata+xml');
 			echo($xml);
+			// For some reason laravel is turning this into a web request .... >.>
+			die();
 		}
 	}
 
