@@ -129,6 +129,8 @@ class SamlStrategy extends SingleSignOnStrategy {
 			empty($settings['configuration']['baseurlpath'])
 		) {
 			SamlStrategy::$settings['baseurlpath'] = '/';
+		} else {
+			SamlStrategy::$settings['baseurlpath'] = $settings['configuration']['baseurlpath'];
 		}
 
 		if (is_array($settings['metadata'])) {
