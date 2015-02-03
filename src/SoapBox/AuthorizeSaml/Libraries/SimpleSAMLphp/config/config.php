@@ -22,7 +22,7 @@ $config = array (
 	 * external url, no matter where you come from (direct access or via the
 	 * reverse proxy).
 	 */
-	'baseurlpath'           => '/',
+	'baseurlpath'           => SoapBox\AuthorizeSaml\SamlStrategy::$settings['baseurlpath'],
 	'certdir'               => 'cert/',
 	'loggingdir'            => 'log/',
 	'datadir'               => 'data/',

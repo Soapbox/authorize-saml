@@ -124,6 +124,13 @@ class SamlStrategy extends SingleSignOnStrategy {
 			$settings['sp_key'] => $settings['configuration']
 		];
 
+		if (
+			!isset($settings['configuration']['baseurlpath']) ||
+			empty($settings['configuration']['baseurlpath'])
+		) {
+			SamlStrategy::$settings['baseurlpath'] = '/';
+		}
+
 		if (is_array($settings['metadata'])) {
 			SamlStrategy::$metadata = [
 				$settings['configuration']['idp'] => $settings['metadata']
