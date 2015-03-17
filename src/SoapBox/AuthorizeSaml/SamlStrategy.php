@@ -186,7 +186,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 	 * @param string $url The destination url where the user should be sent after
 	 *  successful logout.
 	 */
-	public function logout($url) {
+	public function signout($url) {
 		$this->saml->logout($url);
 	}
 
