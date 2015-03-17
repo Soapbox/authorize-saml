@@ -181,6 +181,16 @@ class SamlStrategy extends SingleSignOnStrategy {
 	}
 
 	/**
+	 * Used to de-authenticate the user with the remote idp server.
+	 *
+	 * @param string $url The destination url where the user should be sent after
+	 *  successful logout.
+	 */
+	public function logout($url) {
+		$this->saml->logout($url);
+	}
+
+	/**
 	 * Used to retrieve the user from the remote SAML server.
 	 *
 	 * Sample:
