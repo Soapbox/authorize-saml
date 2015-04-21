@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "soapbox/authorize": "dev-master",
+        "soapbox/authorize": "0.1.*",
         "illuminate/support": "4.2.*"
     },
     "autoload": {
