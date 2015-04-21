@@ -29,6 +29,22 @@ class SamlStrategy extends SingleSignOnStrategy {
 	public static $settings = [];
 
 	/**
+	 * Static array of session information for SAML to use
+	 *
+	 * Sample:
+	 *	[
+	 *		'type' => 'phpsession', // 'sql'
+	 *		'dsn'       => 'mysql:host=127.0.0.1;dbname=sessions',
+	 *		'username'  => 'root',
+	 *		'password'  => 'root',
+	 *		'prefix'    => 'session'
+	 *	]
+	 *
+	 * @var array
+	 */
+	public static $session = [];
+
+	/**
 	 * Static array of metadata configured for SimpleSAMLphp to import.
 	 *
 	 * Sample:
@@ -114,15 +130,18 @@ class SamlStrategy extends SingleSignOnStrategy {
 			!isset($settings['metadata'])      ||
 			!isset($settings['redirect_url'])  ||
 			!isset($settings['error_url'])     ||
-			!isset($settings['sp_key'])) {
+			!isset($settings['sp_key']) ||
+			!isset($settings['session'])) {
 			throw new MissingArgumentsException(
-				'configuration, metadata (array or xml), redirect_url, and error_url parameters are required for SAML support'
+				'configuration, metadata (array or xml), redirect_url, error_url, and session parameters are required for SAML support'
 			);
 		}
 
 		SamlStrategy::$settings = [
 			$settings['sp_key'] => $settings['configuration']
 		];
+
+		SamlStrategy::$session = $settings['session'];
 
 		if (
 			!isset($settings['configuration']['baseurlpath']) ||

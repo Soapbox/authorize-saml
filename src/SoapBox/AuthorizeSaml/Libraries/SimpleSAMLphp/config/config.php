@@ -576,7 +576,7 @@ $config = array (
 	 *
 	 * (This option replaces the old 'session.handler'-option.)
 	 */
-	'store.type' => 'sql',
+	'store.type' => SoapBox\AuthorizeSaml\SamlStrategy::$session['type'],
 
 
 	/*
@@ -585,18 +585,18 @@ $config = array (
 	 * See http://www.php.net/manual/en/pdo.drivers.php for the various
 	 * syntaxes.
 	 */
-	'store.sql.dsn' => 'mysql:host=172.16.3.18;dbname=sessions',
+	'store.sql.dsn' => SoapBox\AuthorizeSaml\SamlStrategy::$session['dsn'],
 
 	/*
 	 * The username and password to use when connecting to the database.
 	 */
-	'store.sql.username' => 'session_manager',
-	'store.sql.password' => 'fTQ2HouHaIz8DvYr',
+	'store.sql.username' => SoapBox\AuthorizeSaml\SamlStrategy::$session['username'],
+	'store.sql.password' => SoapBox\AuthorizeSaml\SamlStrategy::$session['password'],
 
 	/*
 	 * The prefix we should use on our tables.
 	 */
-	'store.sql.prefix' => 'session',
+	'store.sql.prefix' => SoapBox\AuthorizeSaml\SamlStrategy::$session['prefix'],
 
 
 	/*
