@@ -137,8 +137,10 @@ class SamlStrategy extends SingleSignOnStrategy {
 			);
 		}
 
+		$spKey = $settings['sp_key'];
+
 		SamlStrategy::$settings = [
-			$settings['sp_key'] => $settings['configuration']
+			$spKey => $settings['configuration']
 		];
 
 		SamlStrategy::$session = $settings['session'];
@@ -152,12 +154,30 @@ class SamlStrategy extends SingleSignOnStrategy {
 			SamlStrategy::$settings['baseurlpath'] = $settings['configuration']['baseurlpath'];
 		}
 
+		if (
+			!isset($settings['configuration']['certdir']) ||
+			empty($settings['configuration']['certdir'])
+		) {
+			SamlStrategy::$settings['certdir'] = 'cert/';
+		} else {
+			SamlStrategy::$settings['certdir'] = $settings['configuration']['certdir'];
+		}
+
 		if (is_array($settings['metadata'])) {
 			SamlStrategy::$metadata = [
 				$settings['configuration']['idp'] => $settings['metadata']
 			];
 		} else {
 			SamlStrategy::$metadata = SamlHelpers::parseMetadata($settings['metadata'], 'saml20-idp-remote');
+		}
+
+		if (
+			isset(SamlStrategy::$settings[$spKey]['signrequest']) &&
+			SamlStrategy::$settings[$spKey]['signrequest'] == "1"
+		) {
+			unset(SamlStrategy::$settings[$spKey]['signrequest']);
+			SamlStrategy::$settings[$spKey]['sign.authnrequest'] = true;
+			SamlStrategy::$settings[$spKey]['redirect.sign'] = true;
 		}
 
 		SamlStrategy::$urls = [

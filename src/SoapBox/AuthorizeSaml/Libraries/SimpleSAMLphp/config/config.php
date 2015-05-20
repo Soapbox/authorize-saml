@@ -23,7 +23,7 @@ $config = array (
 	 * reverse proxy).
 	 */
 	'baseurlpath'           => SoapBox\AuthorizeSaml\SamlStrategy::$settings['baseurlpath'],
-	'certdir'               => 'cert/',
+	'certdir'               => SoapBox\AuthorizeSaml\SamlStrategy::$settings['certdir'],
 	'loggingdir'            => 'log/',
 	'datadir'               => 'data/',
 
