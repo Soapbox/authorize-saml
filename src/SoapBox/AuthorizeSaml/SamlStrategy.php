@@ -178,6 +178,17 @@ class SamlStrategy extends SingleSignOnStrategy {
 			unset(SamlStrategy::$settings[$spKey]['signrequest']);
 			SamlStrategy::$settings[$spKey]['sign.authnrequest'] = true;
 			SamlStrategy::$settings[$spKey]['redirect.sign'] = true;
+			SamlStrategy::$settings[$spKey]['sign.logout'] = true;
+			SamlStrategy::$settings[$spKey]['signature.algorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512';
+		}
+
+		if (
+			isset(SamlStrategy::$settings[$spKey]['encryption']) &&
+			SamlStrategy::$settings[$spKey]['encryption'] == "1"
+		) {
+			unset(SamlStrategy::$settings[$spKey]['encryption']);
+			SamlStrategy::$settings[$spKey]['assertion.encryption'] = true;
+			SamlStrategy::$settings[$spKey]['nameid.encryption'] = true;
 		}
 
 		SamlStrategy::$urls = [
