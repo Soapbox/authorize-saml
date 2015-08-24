@@ -320,6 +320,10 @@ class SamlStrategy extends SingleSignOnStrategy {
 	}
 
 	public function acs($sourceId = 'dope-sp') {
-		SamlHelpers::acs($sourceId);
+		try {
+			SamlHelpers::acs($sourceId);
+		} catch (\Exception $ex) {
+			throw new AuthenticationException(null, 0, $ex);
+		}
 	}
 }
