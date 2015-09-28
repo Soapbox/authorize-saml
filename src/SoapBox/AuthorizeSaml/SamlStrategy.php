@@ -279,6 +279,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 
 		if (isset($fields['email'])) {
 			$user->email = Helpers::getValueOrDefault($attributes[$fields['email']], '', 0);
+			unset($fields['email']);
 		} else {
 			$name_id = $this->saml->getAuthData('saml:sp:NameID');
 			$user->email = $name_id['Value'];
@@ -288,17 +289,23 @@ class SamlStrategy extends SingleSignOnStrategy {
 			$user->id = $user->email;
 		} else {
 			$user->id = Helpers::getValueOrDefault($attributes[$fields['id']], '', 0);
+			unset($fields['id']);
 		}
 
 		$user->firstname = Helpers::getValueOrDefault($attributes[$fields['firstname']], '', 0);
 		$user->lastname = Helpers::getValueOrDefault($attributes[$fields['lastname']], '', 0);
 		$user->accessToken = 'accessToken';
 
+		unset($fields['firstname']);
+		unset($fields['lastname']);
+
 		foreach ($fields as $key => $value) {
 			if (isset($attributes[$value])) {
 				$user->custom[$key] = Helpers::getValueOrDefault($attributes[$value], '', 0);
 			}
 		}
+
+		\Log::info($user->toArray());
 
 		return $user;
 	}
