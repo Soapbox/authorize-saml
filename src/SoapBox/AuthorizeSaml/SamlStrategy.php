@@ -305,8 +305,6 @@ class SamlStrategy extends SingleSignOnStrategy {
 			}
 		}
 
-		\Log::info($user->toArray());
-
 		return $user;
 	}
 
