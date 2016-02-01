@@ -180,6 +180,10 @@ class SamlStrategy extends SingleSignOnStrategy {
 			SamlStrategy::$settings[$spKey]['redirect.sign'] = true;
 			SamlStrategy::$settings[$spKey]['sign.logout'] = true;
 			SamlStrategy::$settings[$spKey]['signature.algorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512';
+
+			if (isset(SamlStrategy::$settings[$spKey]['signature_algorithm'])) {
+				SamlStrategy::$settings[$spKey]['signature.algorithm'] = SamlStrategy::$settings[$spKey]['signature_algorithm'];
+			}
 		}
 
 		if (
