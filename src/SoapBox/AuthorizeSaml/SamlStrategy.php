@@ -95,6 +95,13 @@ class SamlStrategy extends SingleSignOnStrategy {
 	private $saml;
 
 	/**
+	 * Whether or not the email is required
+	 *
+	 * @var bool
+	 */
+	private $emailRequired = true;
+
+	/**
 	 * Initializes the Saml Strategy for logging in.
 	 *
 	 * Sample:
@@ -138,6 +145,26 @@ class SamlStrategy extends SingleSignOnStrategy {
 		}
 
 		$spKey = $settings['sp_key'];
+		$parameters = $settings['parameters_map'];
+
+		if (
+			!isset($settings['configuration']['email_required']) ||
+			$settings['configuration']['email_required'] === '0'
+		) {
+			$this->emailRequired = false;
+
+			if (empty($parameters['id'])) {
+				throw new MissingArgumentsException(
+					'The "id" parameter is required when "email_required" is set to 0.'
+				);
+			}
+
+			if (empty($parameters['email'])) {
+				throw new MissingArgumentsException(
+					'The "email" parameter is required when "email_required" is set to 0.'
+				);
+			}
+		}
 
 		SamlStrategy::$settings = [
 			$spKey => $settings['configuration']
@@ -282,8 +309,10 @@ class SamlStrategy extends SingleSignOnStrategy {
 		$user = new User;
 
 		if (isset($fields['email'])) {
-			$user->email = Helpers::getValueOrDefault($attributes[$fields['email']], '', 0);
-			unset($fields['email']);
+			if ($this->emailRequired || isset($attributes[$fields['email']])) {
+				$user->email = Helpers::getValueOrDefault($attributes[$fields['email']], '', 0);
+				unset($fields['email']);
+			}
 		} else {
 			$name_id = $this->saml->getAuthData('saml:sp:NameID');
 			$user->email = $name_id['Value'];
