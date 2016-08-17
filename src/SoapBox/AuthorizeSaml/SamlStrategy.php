@@ -148,7 +148,7 @@ class SamlStrategy extends SingleSignOnStrategy {
 		$parameters = $settings['parameters_map'];
 
 		if (
-			!isset($settings['configuration']['email_required']) ||
+			isset($settings['configuration']['email_required']) &&
 			$settings['configuration']['email_required'] === '0'
 		) {
 			$this->emailRequired = false;
