@@ -1,12 +1,18 @@
 <?php
 
+namespace SAML2\XML\md;
+
+use SAML2\Constants;
+use SAML2\SignedElementHelper;
+use SAML2\Utils;
+use Webmozart\Assert\Assert;
+
 /**
  * Class representing SAML 2 AffiliationDescriptor element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
+class AffiliationDescriptor extends SignedElementHelper
 {
     /**
      * The affiliationOwnerID.
@@ -18,21 +24,21 @@ class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
     /**
      * The ID of this element.
      *
-     * @var string|NULL
+     * @var string|null
      */
     public $ID;
 
     /**
      * How long this element is valid, as a unix timestamp.
      *
-     * @var int|NULL
+     * @var int|null
      */
     public $validUntil;
 
     /**
      * The length of time this element can be cached, as string.
      *
-     * @var string|NULL
+     * @var string|null
      */
     public $cacheDuration;
 
@@ -41,9 +47,9 @@ class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
      *
      * Array of extension elements.
      *
-     * @var array
+     * @var \SAML2\XML\Chunk[]
      */
-    public $Extensions = array();
+    public $Extensions = [];
 
     /**
      * The AffiliateMember(s).
@@ -52,99 +58,276 @@ class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
      *
      * @var array
      */
-    public $AffiliateMember = array();
+    public $AffiliateMember = [];
 
     /**
      * KeyDescriptor elements.
      *
-     * Array of SAML2_XML_md_KeyDescriptor elements.
+     * Array of \SAML2\XML\md\KeyDescriptor elements.
      *
-     * @var SAML2_XML_md_KeyDescriptor[]
+     * @var \SAML2\XML\md\KeyDescriptor[]
      */
-    public $KeyDescriptor = array();
+    public $KeyDescriptor = [];
+
 
     /**
      * Initialize a AffiliationDescriptor.
      *
-     * @param DOMElement|NULL $xml The XML element we should load.
-     * @throws Exception
+     * @param \DOMElement|null $xml The XML element we should load.
+     * @throws \Exception
      */
-    public function __construct(DOMElement $xml = NULL)
+    public function __construct(\DOMElement $xml = null)
     {
         parent::__construct($xml);
 
-        if ($xml === NULL) {
+        if ($xml === null) {
             return;
         }
 
         if (!$xml->hasAttribute('affiliationOwnerID')) {
-            throw new Exception('Missing affiliationOwnerID on AffiliationDescriptor.');
+            throw new \Exception('Missing affiliationOwnerID on AffiliationDescriptor.');
         }
-        $this->affiliationOwnerID = $xml->getAttribute('affiliationOwnerID');
+        $this->setAffiliationOwnerID($xml->getAttribute('affiliationOwnerID'));
 
         if ($xml->hasAttribute('ID')) {
-            $this->ID = $xml->getAttribute('ID');
+            $this->setID($xml->getAttribute('ID'));
         }
 
         if ($xml->hasAttribute('validUntil')) {
-            $this->validUntil = SAML2_Utils::xsDateTimeToTimestamp($xml->getAttribute('validUntil'));
+            $this->setValidUntil(Utils::xsDateTimeToTimestamp($xml->getAttribute('validUntil')));
         }
 
         if ($xml->hasAttribute('cacheDuration')) {
-            $this->cacheDuration = $xml->getAttribute('cacheDuration');
+            $this->setCacheDuration($xml->getAttribute('cacheDuration'));
         }
 
-        $this->Extensions = SAML2_XML_md_Extensions::getList($xml);
+        $this->setExtensions(Extensions::getList($xml));
 
-        $this->AffiliateMember = SAML2_Utils::extractStrings($xml, SAML2_Const::NS_MD, 'AffiliateMember');
+        $this->setAffiliateMember(Utils::extractStrings($xml, Constants::NS_MD, 'AffiliateMember'));
         if (empty($this->AffiliateMember)) {
-            throw new Exception('Missing AffiliateMember in AffiliationDescriptor.');
+            throw new \Exception('Missing AffiliateMember in AffiliationDescriptor.');
         }
 
-        foreach (SAML2_Utils::xpQuery($xml, './saml_metadata:KeyDescriptor') as $kd) {
-            $this->KeyDescriptor[] = new SAML2_XML_md_KeyDescriptor($kd);
+        foreach (Utils::xpQuery($xml, './saml_metadata:KeyDescriptor') as $kd) {
+            $this->addKeyDescriptor(new KeyDescriptor($kd));
         }
     }
+
+
+    /**
+     * Collect the value of the affiliationOwnerId-property
+     * @return string
+     */
+    public function getAffiliationOwnerID()
+    {
+        return $this->affiliationOwnerID;
+    }
+
+
+    /**
+     * Set the value of the affiliationOwnerId-property
+     * @param string $affiliationOwnerId
+     * @return void
+     */
+    public function setAffiliationOwnerID($affiliationOwnerId)
+    {
+        Assert::string($affiliationOwnerId);
+        $this->affiliationOwnerID = $affiliationOwnerId;
+    }
+
+
+    /**
+     * Collect the value of the ID-property
+     * @return string|null
+     */
+    public function getID()
+    {
+        return $this->ID;
+    }
+
+
+    /**
+     * Set the value of the ID-property
+     * @param string|null $Id
+     * @return void
+     */
+    public function setID($Id = null)
+    {
+        Assert::nullOrString($Id);
+
+        $this->ID = $Id;
+    }
+
+
+    /**
+     * Collect the value of the validUntil-property
+     * @return int|null
+     */
+    public function getValidUntil()
+    {
+        return $this->validUntil;
+    }
+
+
+    /**
+     * Set the value of the validUntil-property
+     * @param int|null $validUntil
+     * @return void
+     */
+    public function setValidUntil($validUntil = null)
+    {
+        Assert::nullOrInteger($validUntil);
+        $this->validUntil = $validUntil;
+    }
+
+
+    /**
+     * Collect the value of the cacheDuration-property
+     * @return string|null
+     */
+    public function getCacheDuration()
+    {
+        return $this->cacheDuration;
+    }
+
+
+    /**
+     * Set the value of the cacheDuration-property
+     * @param string|null $cacheDuration
+     * @return void
+     */
+    public function setCacheDuration($cacheDuration = null)
+    {
+        Assert::nullOrString($cacheDuration);
+        $this->cacheDuration = $cacheDuration;
+    }
+
+
+    /**
+     * Collect the value of the Extensions-property
+     * @return \SAML2\XML\Chunk[]
+     */
+    public function getExtensions()
+    {
+        return $this->Extensions;
+    }
+
+
+    /**
+     * Set the value of the Extensions-property
+     * @param array $extensions
+     * @return void
+     */
+    public function setExtensions(array $extensions)
+    {
+        $this->Extensions = $extensions;
+    }
+
+
+    /**
+     * Add an Extension.
+     *
+     * @param \SAML2\XML\Chunk $extensions The Extensions
+     * @return void
+     */
+    public function addExtension(Extensions $extension)
+    {
+        $this->Extensions[] = $extension;
+    }
+
+
+    /**
+     * Collect the value of the AffiliateMember-property
+     * @return array
+     */
+    public function getAffiliateMember()
+    {
+        return $this->AffiliateMember;
+    }
+
+
+    /**
+     * Set the value of the AffiliateMember-property
+     * @param array $affiliateMember
+     * @return void
+     */
+    public function setAffiliateMember(array $affiliateMember)
+    {
+        $this->AffiliateMember = $affiliateMember;
+    }
+
+
+    /**
+     * Collect the value of the KeyDescriptor-property
+     * @return \SAML2\XML\md\KeyDescriptor[]
+     */
+    public function getKeyDescriptor()
+    {
+        return $this->KeyDescriptor;
+    }
+
+
+    /**
+     * Set the value of the KeyDescriptor-property
+     * @param array $keyDescriptor
+     * @return void
+     */
+    public function setKeyDescriptor(array $keyDescriptor)
+    {
+        $this->KeyDescriptor = $keyDescriptor;
+    }
+
+
+    /**
+     * Add the value to the KeyDescriptor-property
+     * @param \SAML2\XML\md\KeyDescriptor $keyDescriptor
+     * @return void
+     */
+    public function addKeyDescriptor(KeyDescriptor $keyDescriptor)
+    {
+        $this->KeyDescriptor[] = $keyDescriptor;
+    }
+
 
     /**
      * Add this AffiliationDescriptor to an EntityDescriptor.
      *
-     * @param DOMElement $parent The EntityDescriptor we should append this endpoint to.
-     * @return DOMElement
+     * @param \DOMElement $parent The EntityDescriptor we should append this endpoint to.
+     * @return \DOMElement
      */
-    public function toXML(DOMElement $parent)
+    public function toXML(\DOMElement $parent)
     {
-        assert('is_string($this->affiliationOwnerID)');
-        assert('is_null($this->ID) || is_string($this->ID)');
-        assert('is_null($this->validUntil) || is_int($this->validUntil)');
-        assert('is_null($this->cacheDuration) || is_string($this->cacheDuration)');
-        assert('is_array($this->Extensions)');
-        assert('is_array($this->AffiliateMember)');
-        assert('!empty($this->AffiliateMember)');
-        assert('is_array($this->KeyDescriptor)');
+        Assert::string($this->getAffiliationOwnerID());
+        Assert::nullOrString($this->getID());
+        Assert::nullOrInteger($this->getValidUntil());
+        Assert::nullOrString($this->getCacheDuration());
+        Assert::isArray($this->getExtensions());
+        Assert::isArray($affiliateMember = $this->getAffiliateMember());
+        Assert::notEmpty($affiliateMember);
+        Assert::isArray($this->getKeyDescriptor());
 
-        $e = $parent->ownerDocument->createElementNS(SAML2_Const::NS_MD, 'md:AffiliationDescriptor');
+        $e = $parent->ownerDocument->createElementNS(Constants::NS_MD, 'md:AffiliationDescriptor');
         $parent->appendChild($e);
 
-        $e->setAttribute('affiliationOwnerID', $this->affiliationOwnerID);
+        $e->setAttribute('affiliationOwnerID', $this->getAffiliationOwnerID());
 
-        if (isset($this->ID)) {
-            $e->setAttribute('ID', $this->ID);
+        if ($this->getID() !== null) {
+            $e->setAttribute('ID', $this->getID());
         }
 
-        if (isset($this->validUntil)) {
-            $e->setAttribute('validUntil', gmdate('Y-m-d\TH:i:s\Z', $this->validUntil));
+        if ($this->getValidUntil() !== null) {
+            $e->setAttribute('validUntil', gmdate('Y-m-d\TH:i:s\Z', $this->getValidUntil()));
         }
 
-        if (isset($this->cacheDuration)) {
-            $e->setAttribute('cacheDuration', $this->cacheDuration);
+        if ($this->getCacheDuration() !== null) {
+            $e->setAttribute('cacheDuration', $this->getCacheDuration());
         }
 
-        SAML2_XML_md_Extensions::addList($e, $this->Extensions);
+        Extensions::addList($e, $this->getExtensions());
 
-        SAML2_Utils::addStrings($e, SAML2_Const::NS_MD, 'md:AffiliateMember', FALSE, $this->AffiliateMember);
+        Utils::addStrings($e, Constants::NS_MD, 'md:AffiliateMember', false, $this->getAffiliateMember());
 
-        foreach ($this->KeyDescriptor as $kd) {
+        foreach ($this->getKeyDescriptor() as $kd) {
             $kd->toXML($e);
         }
 
@@ -152,5 +335,4 @@ class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
 
         return $e;
     }
-
 }

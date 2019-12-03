@@ -2,31 +2,24 @@
 /**
  * Show a 403 Forbidden page about not authorized to access an application.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 
 if (!array_key_exists('StateId', $_REQUEST)) {
-	throw new SimpleSAML_Error_BadRequest('Missing required StateId query parameter.');
+    throw new \SimpleSAML\Error\BadRequest('Missing required StateId query parameter.');
 }
+$state = \SimpleSAML\Auth\State::loadState($_REQUEST['StateId'], 'authorize:Authorize');
 
-$id = $_REQUEST['StateId'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($id);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
-$state = SimpleSAML_Auth_State::loadState($id, 'authorize:Authorize');
-
-$globalConfig = SimpleSAML_Configuration::getInstance();
-$t = new SimpleSAML_XHTML_Template($globalConfig, 'authorize:authorize_403.php');
+$globalConfig = \SimpleSAML\Configuration::getInstance();
+$t = new \SimpleSAML\XHTML\Template($globalConfig, 'authorize:authorize_403.php');
 if (isset($state['Source']['auth'])) {
-    $t->data['LogoutURL'] = SimpleSAML_Module::getModuleURL('core/authenticate.php', array('as' => $state['Source']['auth']))."&logout";
+    $t->data['logoutURL'] = \SimpleSAML\Module::getModuleURL(
+        'core/authenticate.php',
+        ['as' => $state['Source']['auth']]
+    )."&logout";
+}
+if (isset($state['authprocAuthorize_reject_msg'])) {
+    $t->data['reject_msg'] = $state['authprocAuthorize_reject_msg'];
 }
 header('HTTP/1.0 403 Forbidden');
 $t->show();
-
-
-?>

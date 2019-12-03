@@ -23,10 +23,25 @@
 	"sessionsize": {
 		"en": "Session size: %SIZE%"
 	},
+	"subject_header": {
+		"en": "SAML Subject"
+	},
+	"subject_notset": {
+		"en": "not set"
+	},
+	"subject_format": {
+		"en": "Format"
+	},
 	"attributes_header": {
 		"en": "Your attributes"
 	},
 	"logout": {
 		"en": "Logout"
+	},
+	"authData_header": {
+		"en": "AuthData"
+	},
+	"authData_summary": {
+		"en": "Click to view AuthData"
 	}
 }

@@ -1,13 +1,17 @@
 <?php
 
+namespace SAML2\XML\mdrpi;
+
+use SAML2\Utils;
+use Webmozart\Assert\Assert;
+
 /**
  * Class for handling the mdrpi:RegistrationInfo element.
  *
  * @link: http://docs.oasis-open.org/security/saml/Post2.0/saml-metadata-rpi/v1.0/saml-metadata-rpi-v1.0.pdf
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_XML_mdrpi_RegistrationInfo
+class RegistrationInfo
 {
     /**
      * The identifier of the metadata registration authority.
@@ -19,7 +23,7 @@ class SAML2_XML_mdrpi_RegistrationInfo
     /**
      * The registration timestamp for the metadata, as a UNIX timestamp.
      *
-     * @var int|NULL
+     * @var int|null
      */
     public $registrationInstant;
 
@@ -30,62 +34,129 @@ class SAML2_XML_mdrpi_RegistrationInfo
      *
      * @var array
      */
-    public $RegistrationPolicy = array();
+    public $RegistrationPolicy = [];
+
 
     /**
      * Create/parse a mdrpi:RegistrationInfo element.
      *
-     * @param DOMElement|NULL $xml The XML element we should load.
-     * @throws Exception
+     * @param \DOMElement|null $xml The XML element we should load.
+     * @throws \Exception
      */
-    public function __construct(DOMElement $xml = NULL)
+    public function __construct(\DOMElement $xml = null)
     {
-        if ($xml === NULL) {
+        if ($xml === null) {
             return;
         }
 
         if (!$xml->hasAttribute('registrationAuthority')) {
-            throw new Exception('Missing required attribute "registrationAuthority" in mdrpi:RegistrationInfo element.');
+            throw new \Exception('Missing required attribute "registrationAuthority" in mdrpi:RegistrationInfo element.');
         }
-        $this->registrationAuthority = $xml->getAttribute('registrationAuthority');
+        $this->setRegistrationAuthority($xml->getAttribute('registrationAuthority'));
 
         if ($xml->hasAttribute('registrationInstant')) {
-            $this->registrationInstant = SAML2_Utils::xsDateTimeToTimestamp($xml->getAttribute('registrationInstant'));
+            $this->setRegistrationInstant(Utils::xsDateTimeToTimestamp($xml->getAttribute('registrationInstant')));
         }
 
-        $this->RegistrationPolicy = SAML2_Utils::extractLocalizedStrings($xml, SAML2_XML_mdrpi_Common::NS_MDRPI, 'RegistrationPolicy');
+        $this->setRegistrationPolicy(Utils::extractLocalizedStrings($xml, Common::NS_MDRPI, 'RegistrationPolicy'));
     }
+
+
+    /**
+     * Collect the value of the RegistrationAuthority-property
+     * @return string
+     */
+    public function getRegistrationAuthority()
+    {
+        return $this->registrationAuthority;
+    }
+
+
+    /**
+     * Set the value of the registrationAuthority-property
+     * @param string $registrationAuthority
+     * @return void
+     */
+    public function setRegistrationAuthority($registrationAuthority)
+    {
+        Assert::string($registrationAuthority);
+        $this->registrationAuthority = $registrationAuthority;
+    }
+
+
+    /**
+     * Collect the value of the registrationInstant-property
+     * @return int|null
+     */
+    public function getRegistrationInstant()
+    {
+        return $this->registrationInstant;
+    }
+
+
+    /**
+     * Set the value of the registrationInstant-property
+     * @param int|null $registrationInstant
+     * @return void
+     */
+    public function setRegistrationInstant($registrationInstant = null)
+    {
+        Assert::nullOrInteger($registrationInstant);
+        $this->registrationInstant = $registrationInstant;
+    }
+
+
+    /**
+     * Collect the value of the RegistrationPolicy-property
+     * @return array
+     */
+    public function getRegistrationPolicy()
+    {
+        return $this->RegistrationPolicy;
+    }
+
+
+    /**
+     * Set the value of the RegistrationPolicy-property
+     * @param array $registrationPolicy
+     * @return void
+     */
+    public function setRegistrationPolicy(array $registrationPolicy)
+    {
+        $this->RegistrationPolicy = $registrationPolicy;
+    }
+
 
     /**
      * Convert this element to XML.
      *
-     * @param DOMElement $parent The element we should append to.
-     * @return DOMElement
+     * @param \DOMElement $parent The element we should append to.
+     * @return \DOMElement
      */
-    public function toXML(DOMElement $parent)
+    public function toXML(\DOMElement $parent)
     {
-        assert('is_string($this->registrationAuthority)');
-        assert('is_int($this->registrationInstant) || is_null($this->registrationInstant)');
-        assert('is_array($this->RegistrationPolicy)');
+        Assert::string($this->getRegistrationAuthority());
+        Assert::nullOrInteger($this->getRegistrationInstant());
+        Assert::isArray($this->getRegistrationPolicy());
 
-        if (empty($this->registrationAuthority)) {
-            throw new Exception('Missing required registration authority.');
+        $registrationAuthority = $this->getRegistrationAuthority();
+        if (empty($registrationAuthority)) {
+            throw new \Exception('Missing required registration authority.');
         }
 
         $doc = $parent->ownerDocument;
 
-        $e = $doc->createElementNS(SAML2_XML_mdrpi_Common::NS_MDRPI, 'mdrpi:RegistrationInfo');
+        $e = $doc->createElementNS(Common::NS_MDRPI, 'mdrpi:RegistrationInfo');
         $parent->appendChild($e);
 
-        $e->setAttribute('registrationAuthority', $this->registrationAuthority);
+        $e->setAttribute('registrationAuthority', $this->getRegistrationAuthority());
 
-        if ($this->registrationInstant !== NULL) {
-            $e->setAttribute('registrationInstant', gmdate('Y-m-d\TH:i:s\Z', $this->registrationInstant));
+        if ($this->getRegistrationInstant() !== null) {
+            $e->setAttribute('registrationInstant', gmdate('Y-m-d\TH:i:s\Z', $this->getRegistrationInstant()));
         }
 
-        SAML2_Utils::addStrings($e, SAML2_XML_mdrpi_Common::NS_MDRPI, 'mdrpi:RegistrationPolicy', TRUE, $this->RegistrationPolicy);
+        Utils::addStrings($e, Common::NS_MDRPI, 'mdrpi:RegistrationPolicy', true, $this->getRegistrationPolicy());
 
         return $e;
     }
-
 }

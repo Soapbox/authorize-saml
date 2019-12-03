@@ -2,45 +2,72 @@
 
 set -e
 
-TAG=$1
+VERSION=$1
+REPOPATH=$2
+
 if ! shift; then
-    echo "$0: Missing required tag parameter." >&2
+    echo "$0: Missing required version parameter." >&2
     exit 1
 fi
 
-if [ -z "$TAG" ]; then
-    echo "$0: Empty tag parameter." >&2
+if [ -z "$VERSION" ]; then
+    echo "$0: Empty version parameter." >&2
     exit 1
 fi
+
+if [ -z "$REPOPATH" ]; then
+    REPOPATH="https://github.com/simplesamlphp/simplesamlphp.git"
+fi
+
+TAG="v$VERSION"
+TARGET="simplesamlphp-$VERSION"
 
 cd /tmp
 
-if [ -a "$TAG" ]; then
-    echo "$0: Destination already exists: $TAG" >&2
+if [ -a "$TARGET" ]; then
+    echo "$0: Destination already exists: $TARGET" >&2
     exit 1
 fi
 
 umask 0022
 
-REPOPATH="http://simplesamlphp.googlecode.com/svn/tags/$TAG/"
+git clone $REPOPATH $TARGET
+cd $TARGET
+git checkout $TAG
+cd ..
 
-svn export "$REPOPATH"
-
-# Use composer only on newer versions that have a composer.json
-if [ -f "$TAG/composer.json" ]; then
-    if [ ! -x composer.phar ]; then
-        echo "$0: Composerfile detected, but Composer not installed?" >&2
-        exit 1
-    fi
-
-    # Install dependencies (without vcs history or dev tools)
-    php composer.phar install --no-dev --prefer-dist -o -d "$TAG"
+if [ ! -x "$TARGET/composer.phar" ]; then
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=$TARGET
 fi
 
-mkdir -p "$TAG/config" "$TAG/metadata"
-cp -rv "$TAG/config-templates/"* "$TAG/config/"
-cp -rv "$TAG/metadata-templates/"* "$TAG/metadata/"
-tar --owner 0 --group 0 -cvzf "$TAG.tar.gz" "$TAG"
-rm -rf "$TAG"
+# Set the version in composer.json
+php "$TARGET/composer.phar" config version "$VERSION" -d "$TARGET"
 
-echo "Created: /tmp/$TAG.tar.gz"
+# Install dependencies (without vcs history or dev tools)
+php "$TARGET/composer.phar" install --no-dev --prefer-dist -o -d "$TARGET"
+
+cd $TARGET 
+npm install
+npm audit fix
+npm run build
+cd ..
+
+mkdir -p "$TARGET/config" "$TARGET/metadata" "$TARGET/cert" "$TARGET/log" "$TARGET/data"
+cp -rv "$TARGET/config-templates/"* "$TARGET/config/"
+cp -rv "$TARGET/metadata-templates/"* "$TARGET/metadata/"
+rm -rf "$TARGET/.git"
+rm -rf "$TARGET/node_modules"
+rm "$TARGET/www/assets/js/stylesheet.js"*
+rm "$TARGET/.coveralls.yml"
+rm "$TARGET/.editorconfig"
+rm "$TARGET/.gitattributes"
+rm "$TARGET/.php_cs.dist"
+rm "$TARGET/.travis.yml"
+rm "$TARGET/psalm.xml"
+rm "$TARGET"/{,modules}/.gitignore
+rm "$TARGET"/{cache,config,metadata,locales}/.gitkeep
+rm "$TARGET/composer.phar"
+tar --owner 0 --group 0 -cvzf "$TARGET.tar.gz" "$TARGET"
+rm -rf "$TARGET"
+
+echo "Created: /tmp/$TARGET.tar.gz"

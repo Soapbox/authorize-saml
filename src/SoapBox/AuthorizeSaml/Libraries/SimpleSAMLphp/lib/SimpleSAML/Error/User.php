@@ -1,16 +1,16 @@
 <?php
 
+namespace SimpleSAML\Error;
+
 /**
  * Baseclass for user error exceptions
- * 
- * 
+ *
+ *
  * @author Thomas Graff <thomas.graff@uninett.no>
- * @package simpleSAMLphp_base
- * @version $Id$
+ * @package SimpleSAMLphp_base
  *
  */
-class SimpleSAML_Error_User extends SimpleSAML_Error_Exception{
-	
-}
 
-?>
+class User extends Exception
+{
+}

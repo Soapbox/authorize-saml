@@ -1,12 +1,18 @@
 <?php
 
+namespace SAML2\XML;
+
+use DOMElement;
+use SAML2\DOMDocumentFactory;
+use SAML2\Utils;
+use Webmozart\Assert\Assert;
+
 /**
  * Serializable class used to hold an XML element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_XML_Chunk
+class Chunk implements \Serializable
 {
     /**
      * The localName of the element.
@@ -18,82 +24,134 @@ class SAML2_XML_Chunk
     /**
      * The namespaceURI of this element.
      *
-     * @var string
+     * @var string|null
      */
     public $namespaceURI;
 
     /**
-     * The DOMElement we contain.
+     * The \DOMElement we contain.
      *
-     * @var DOMElement
+     * @var \DOMElement
      */
-    private $xml;
+    public $xml;
+
 
     /**
-     * The DOMElement as a text string. Used during serialization.
+     * Create a XMLChunk from a copy of the given \DOMElement.
      *
-     * @var string|NULL
+     * @param \DOMElement $xml The element we should copy.
      */
-    private $xmlString;
-
-    /**
-     * Create a XMLChunk from a copy of the given DOMElement.
-     *
-     * @param DOMElement $xml The element we should copy.
-     */
-    public function __construct(DOMElement $xml)
+    public function __construct(\DOMElement $xml)
     {
-        $this->localName = $xml->localName;
-        $this->namespaceURI = $xml->namespaceURI;
+        $this->setLocalName($xml->localName);
+        $this->setNamespaceURI($xml->namespaceURI);
 
-        $this->xml = SAML2_Utils::copyElement($xml);
+        $this->setXml(Utils::copyElement($xml));
     }
 
+
     /**
-     * Get this DOMElement.
+     * Get this \DOMElement.
      *
-     * @return DOMElement This element.
+     * @return \DOMElement This element.
+     * @deprecated
      */
     public function getXML()
     {
-        assert('$this->xml instanceof DOMElement || is_string($this->xmlString)');
-
-        if ($this->xml === NULL) {
-            $doc = new DOMDocument();
-            $doc->loadXML($this->xmlString);
-            $this->xml = $doc->firstChild;
-        }
-
         return $this->xml;
     }
+
 
     /**
      * Append this XML element to a different XML element.
      *
-     * @param  DOMElement $parent The element we should append this element to.
-     * @return DOMElement The new element.
+     * @param  \DOMElement $parent The element we should append this element to.
+     * @return \DOMElement The new element.
      */
     public function toXML(DOMElement $parent)
     {
-        return SAML2_Utils::copyElement($this->getXML(), $parent);
+        return Utils::copyElement($this->xml, $parent);
     }
+
 
     /**
-     * Serialization handler.
-     *
-     * Converts the XML data to a string that can be serialized
-     *
-     * @return array List of properties that should be serialized.
+     * Collect the value of the localName-property
+     * @return string
      */
-    public function __sleep()
+    public function getLocalName()
     {
-        assert('$this->xml instanceof DOMElement || is_string($this->xmlString)');
-
-        if ($this->xmlString === NULL) {
-            $this->xmlString = $this->xml->ownerDocument->saveXML($this->xml);
-        }
-
-        return array('xmlString', 'localName', 'namespaceURI');
+        return $this->localName;
     }
 
+
+    /**
+     * Set the value of the localName-property
+     * @param string $localName
+     * @return void
+     */
+    public function setLocalName($localName)
+    {
+        Assert::string($localName);
+        $this->localName = $localName;
+    }
+
+
+    /**
+     * Collect the value of the namespaceURI-property
+     * @return string|null
+     */
+    public function getNamespaceURI()
+    {
+        return $this->namespaceURI;
+    }
+
+
+    /**
+     * Set the value of the namespaceURI-property
+     * @param string|null $namespaceURI
+     * @return void
+     */
+    public function setNamespaceURI($namespaceURI = null)
+    {
+        Assert::nullOrString($namespaceURI);
+        $this->namespaceURI = $namespaceURI;
+    }
+
+
+    /**
+     * Set the value of the xml-property
+     * @param \DOMelement $xml
+     * @return void
+     */
+    private function setXml($xml)
+    {
+        Assert::isInstanceOf($xml, DOMElement::class);
+        $this->xml = $xml;
+    }
+
+
+    /**
+     * Serialize this XML chunk.
+     *
+     * @return string The serialized chunk.
+     */
+    public function serialize()
+    {
+        return serialize($this->getXml()->ownerDocument->saveXML($this->getXml()));
+    }
+
+
+    /**
+     * Un-serialize this XML chunk.
+     *
+     * @param  string          $serialized The serialized chunk.
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        $doc = DOMDocumentFactory::fromString(unserialize($serialized));
+        $this->setXml($doc->documentElement);
+        $this->setLocalName($this->getXml()->localName);
+        $this->setNamespaceURI($this->getXml()->namespaceURI);
+    }
 }
