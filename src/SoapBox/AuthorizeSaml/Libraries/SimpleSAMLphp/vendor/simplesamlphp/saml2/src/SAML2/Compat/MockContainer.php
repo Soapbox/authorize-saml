@@ -1,9 +1,11 @@
 <?php
 
+namespace SAML2\Compat;
+
 /**
- * Class SAML2_Compat_MockContainer
+ * Class \SAML2\Compat\MockContainer
  */
-class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
+class MockContainer extends AbstractContainer
 {
     /**
      * @var string
@@ -13,7 +15,7 @@ class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
     /**
      * @var array
      */
-    private $debugMessages = array();
+    private $debugMessages = [];
 
     /**
      * @var string
@@ -35,22 +37,26 @@ class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
      */
     private $postRedirectData;
 
+
     /**
      * Get a PSR-3 compatible logger.
-     * @return Psr\Log\LoggerInterface
+     * @return \Psr\Log\LoggerInterface
      */
     public function getLogger()
     {
         return new \Psr\Log\NullLogger();
     }
 
+
     /**
      * Generate a random identifier for identifying SAML2 documents.
+     * @return string
      */
     public function generateId()
     {
         return $this->id;
     }
+
 
     /**
      * Log an incoming message to the debug log.
@@ -70,6 +76,7 @@ class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
         $this->debugMessages[$type] = $message;
     }
 
+
     /**
      * Trigger the user to perform a GET to the given URL with the given data.
      *
@@ -77,11 +84,12 @@ class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
      * @param array $data
      * @return void
      */
-    public function redirect($url, $data = array())
+    public function redirect($url, $data = [])
     {
         $this->redirectUrl = $url;
         $this->redirectData = $data;
     }
+
 
     /**
      * Trigger the user to perform a POST to the given URL with the given data.
@@ -90,7 +98,7 @@ class SAML2_Compat_MockContainer extends SAML2_Compat_AbstractContainer
      * @param array $data
      * @return void
      */
-    public function postRedirect($url, $data = array())
+    public function postRedirect($url, $data = [])
     {
         $this->postRedirectUrl = $url;
         $this->postRedirectData = $data;

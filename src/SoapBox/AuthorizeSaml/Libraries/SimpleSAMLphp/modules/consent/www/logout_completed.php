@@ -2,10 +2,9 @@
 /**
  * This is the handler for logout completed from the consent page.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 
-$globalConfig = SimpleSAML_Configuration::getInstance();
-$t = new SimpleSAML_XHTML_Template($globalConfig, 'consent:logout_completed.php');
+$globalConfig = \SimpleSAML\Configuration::getInstance();
+$t = new \SimpleSAML\XHTML\Template($globalConfig, 'consent:logout_completed.php');
 $t->show();

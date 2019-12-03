@@ -5,44 +5,41 @@
  *
  * @param array &$hookinfo  hookinfo
  */
-function portal_hook_htmlinject(&$hookinfo) {
-	assert('is_array($hookinfo)');
-	assert('array_key_exists("pre", $hookinfo)');
-	assert('array_key_exists("post", $hookinfo)');
-	assert('array_key_exists("page", $hookinfo)');
+function portal_hook_htmlinject(&$hookinfo)
+{
+    assert(is_array($hookinfo));
+    assert(array_key_exists('pre', $hookinfo));
+    assert(array_key_exists('post', $hookinfo));
+    assert(array_key_exists('page', $hookinfo));
 
-	$links = array('links' => array());
-	SimpleSAML_Module::callHooks('frontpage', $links);
+    $links = ['links' => []];
+    \SimpleSAML\Module::callHooks('frontpage', $links);
 
-#	echo('<pre>');	print_r($links); exit;
+    $portalConfig = \SimpleSAML\Configuration::getOptionalConfig('module_portal.php');
 
-	$portalConfig = SimpleSAML_Configuration::getOptionalConfig('module_portal.php');
-	
-	$allLinks = array();
-	foreach($links AS $ls) {
-		$allLinks = array_merge($allLinks, $ls);
-	}
+    $allLinks = [];
+    foreach ($links as $ls) {
+        $allLinks = array_merge($allLinks, $ls);
+    }
 
-	$pagesets = $portalConfig->getValue('pagesets', array(
-		array('frontpage_welcome', 'frontpage_config', 'frontpage_auth', 'frontpage_federation'),
-	));
-	SimpleSAML_Module::callHooks('portalextras', $pagesets);
-	$portal = new sspmod_portal_Portal($allLinks, $pagesets);
-	
-	if (!$portal->isPortalized($hookinfo['page'])) return;
+    $pagesets = $portalConfig->getValue('pagesets', [
+        ['frontpage_welcome', 'frontpage_config', 'frontpage_auth', 'frontpage_federation'],
+    ]);
+    \SimpleSAML\Module::callHooks('portalextras', $pagesets);
+    $portal = new \SimpleSAML\Module\portal\Portal($allLinks, $pagesets);
 
-	#print_r($portal->getMenu($hookinfo['page'])); exit;
+    if (!$portal->isPortalized($hookinfo['page'])) {
+        return;
+    }
 
-	// Include jquery UI CSS files in header.
-	$hookinfo['jquery']['css'] = TRUE;
-	$hookinfo['jquery']['version'] = '1.6';
+    // Include jquery UI CSS files in header
+    $hookinfo['jquery']['css'] = true;
 
-	// Header
-	$hookinfo['pre'][]  = '<div id="portalmenu" class="ui-tabs ui-widget ui-widget-content ui-corner-all">' . 
-		$portal->getMenu($hookinfo['page']) . 
-		'<div id="portalcontent" class="ui-tabs-panel ui-widget-content ui-corner-bottom">';
+    // Header
+    $hookinfo['pre'][] = '<div id="portalmenu" class="ui-tabs ui-widget ui-widget-content ui-corner-all">'.
+        $portal->getMenu($hookinfo['page']).
+        '<div id="portalcontent" class="ui-tabs-panel ui-widget-content ui-corner-bottom">';
 
-	// Footer
-	$hookinfo['post'][] = '</div></div>';
-	
+    // Footer
+    $hookinfo['post'][] = '</div></div>';
 }
