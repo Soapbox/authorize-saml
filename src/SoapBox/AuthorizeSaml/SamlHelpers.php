@@ -6,6 +6,7 @@ use SimpleSAML\Module\saml\Error;
 use SimpleSAML\Module\saml\Message;
 use SimpleSAML\Module\saml\Auth\Source\SP;
 use SimpleSAML\Module\saml\SP\LogoutStore;
+use SimpleSAML\XML\Validator;
 
 require_once(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
 
@@ -14,7 +15,8 @@ class SamlHelpers {
 	public static function parseMetadata($xmldata) {
 		$config = \SimpleSAML\Configuration::getInstance();
 
-		Utils::validateXMLDocument($xmldata, 'saml-meta');
+//		Utils::validateXMLDocument($xmldata, 'saml-meta');
+        \SimpleSAML\Utils\XML::checkSAMLMessage($xmldata, 'saml-meta');
 		$entities = \SimpleSAML\Metadata\SAMLParser::parseDescriptorsString($xmldata);
 
 		/* Get all metadata for the entities. */
@@ -28,7 +30,8 @@ class SamlHelpers {
 		}
 
 		/* Transpose from $entities[entityid][type] to $output[type][entityid]. */
-		$output = Utils::transposeArray($entities);
+//		$output = Utils::transposeArray($entities);
+        $output = \SimpleSAML\Utils\Arrays::transpose($entities);
 
 		return $output['saml20-idp-remote'];
 	}
@@ -67,7 +70,7 @@ class SamlHelpers {
 		$slol = \SimpleSAML\Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
 
 		foreach ($slob as $binding) {
-			if ($binding == \SAML2_Const::BINDING_SOAP && !($store instanceof \SimpleSAML\Store\SQL)) {
+			if ($binding == Constants::BINDING_SOAP && !($store instanceof \SimpleSAML\Store\SQL)) {
 				/* We cannot properly support SOAP logout. */
 				continue;
 			}
@@ -130,7 +133,8 @@ class SamlHelpers {
 		$metaArray20['AssertionConsumerService'] = $eps;
 
 		$keys = array();
-		$certInfo = Utils::loadPublicKey($spconfig, false, 'new_');
+//		$certInfo = Utils::loadPublicKey($spconfig, false, 'new_');
+        $certInfo = \SimpleSAML\Utils\Crypto::loadPublicKey($spconfig, false, 'new_');
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$hasNewCert = true;
 
@@ -146,7 +150,7 @@ class SamlHelpers {
 			$hasNewCert = false;
 		}
 
-		$certInfo = Utils::loadPublicKey($spconfig);
+		$certInfo = \SimpleSAML\Utils\Crypto::loadPublicKey($spconfig);
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$certData = $certInfo['certData'];
 
@@ -293,7 +297,7 @@ class SamlHelpers {
 	}
 
 	public static function acs($sourceId = 'dope-sp') {
-		$source = \SimpleSAML\Auth\Source::getById($sourceId, 'sspmod_saml_Auth_Source_SP');
+		$source = \SimpleSAML\Auth\Source::getById($sourceId, 'SimpleSAML\Module\saml\Auth\Source\SP');
 		$spMetadata = $source->getMetadata();
 
 		$b = \SAML2\Binding::getCurrentBinding();
@@ -322,7 +326,7 @@ class SamlHelpers {
 			}
 		}
 
-		$session = \SimpleSAML\Session::getInstance();
+		$session = \SimpleSAML\Session::getSession();
 		$prevAuth = $session->getAuthData($sourceId, 'saml:sp:prevAuth');
 		if ($prevAuth !== NULL && $prevAuth['id'] === $response->getId() && $prevAuth['issuer'] === $idp) {
 			/* OK, it looks like this message has the same issuer
@@ -342,9 +346,10 @@ class SamlHelpers {
 		if (!empty($stateId)) {
 
 			// sanitize the input
-			$sid = Utils::parseStateID($stateId);
+//			$sid = Utils::parseStateID($stateId);
+            $sid = \SimpleSAML\Auth\State::parseStateID($stateId);
 			if (!is_null($sid['url'])) {
-				Utils::checkURLAllowed($sid['url']);
+                \SimpleSAML\Utils\HTTP::checkURLAllowed($sid['url']);
 			}
 
 			/* This is a response to a request we sent earlier. */
@@ -370,7 +375,7 @@ class SamlHelpers {
 			$state = array(
 				'saml:sp:isUnsolicited' => TRUE,
 				'saml:sp:AuthId' => $sourceId,
-				'saml:sp:RelayState' => Utils::checkURLAllowed($response->getRelayState()),
+				'saml:sp:RelayState' => \SimpleSAML\Utils\HTTP::($response->getRelayState()),
 			);
 		}
 
