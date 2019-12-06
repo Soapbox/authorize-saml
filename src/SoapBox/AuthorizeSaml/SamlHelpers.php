@@ -1,14 +1,20 @@
 <?php namespace SoapBox\AuthorizeSaml;
 
+use SAML2\Constants;
+use SimpleSAML\Module\saml\Error;
+use SimpleSAML\Module\saml\Message;
+use SimpleSAML\Module\saml\Auth\Source\SP;
+use SimpleSAML\Module\saml\SP\LogoutStore;
+
 require_once(__DIR__ . '/Libraries/SimpleSAMLphp/lib/_autoload.php');
 
 class SamlHelpers {
 
 	public static function parseMetadata($xmldata) {
-		$config = \SimpleSAML_Configuration::getInstance();
+		$config = \SimpleSAML\Configuration::getInstance();
 
-		\SimpleSAML_Utilities::validateXMLDocument($xmldata, 'saml-meta');
-		$entities = \SimpleSAML_Metadata_SAMLParser::parseDescriptorsString($xmldata);
+		\SimpleSAML\Utils::validateXMLDocument($xmldata, 'saml-meta');
+		$entities = \SimpleSAML\Metadata\SAMLParser::parseDescriptorsString($xmldata);
 
 		/* Get all metadata for the entities. */
 		foreach ($entities as &$entity) {
@@ -21,7 +27,7 @@ class SamlHelpers {
 		}
 
 		/* Transpose from $entities[entityid][type] to $output[type][entityid]. */
-		$output = \SimpleSAML_Utilities::transposeArray($entities);
+		$output = \SimpleSAML\Utils::transposeArray($entities);
 
 		return $output['saml20-idp-remote'];
 	}
@@ -29,37 +35,38 @@ class SamlHelpers {
 
 	public static function metadata($sourceId = 'dope-sp') {
 
-		$config = \SimpleSAML_Configuration::getInstance();
-		$source = \SimpleSAML_Auth_Source::getById($sourceId);
+		$config = \SimpleSAML\Configuration::getInstance();
+		$source = \SimpleSAML\Auth\Source::getById($sourceId);
 
 		if ($source === null) {
-			throw new \SimpleSAML_Error_NotFound(
+			throw new \SimpleSAML\Error\NotFound(
 				'Could not find authentication source with id ' . $sourceId
 			);
 		}
 
-		if (!($source instanceof \sspmod_saml_Auth_Source_SP)) {
-			throw new \SimpleSAML_Error_NotFound(
+//		if (!($source instanceof \sspmod_saml_Auth_Source_SP)) {
+        if (!($source instanceof SP)) {
+			throw new \SimpleSAML\Error\NotFound(
 				'Source isn\'t a SAML SP: ' . var_export($sourceId, true)
 			);
 		}
 
 		$entityId = $source->getEntityId();
 		$spconfig = $source->getMetadata();
-		$store = \SimpleSAML_Store::getInstance();
+		$store = \SimpleSAML\Store::getInstance();
 
 		$metaArray20 = array();
 
-		$slosvcdefault = array(
-			\SAML2_Const::BINDING_HTTP_REDIRECT,
-			\SAML2_Const::BINDING_SOAP,
-		);
+        $slosvcdefault = [
+            Constants::BINDING_HTTP_REDIRECT,
+            Constants::BINDING_SOAP
+        ];
 
 		$slob = $spconfig->getArray('SingleLogoutServiceBinding', $slosvcdefault);
-		$slol = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
+		$slol = \SimpleSAML\Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
 
 		foreach ($slob as $binding) {
-			if ($binding == \SAML2_Const::BINDING_SOAP && !($store instanceof \SimpleSAML_Store_SQL)) {
+			if ($binding == \SAML2_Const::BINDING_SOAP && !($store instanceof \SimpleSAML\Store\SQL)) {
 				/* We cannot properly support SOAP logout. */
 				continue;
 			}
@@ -92,27 +99,27 @@ class SamlHelpers {
 			$acsArray = array('index' => $index);
 			switch ($services) {
 				case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST':
-					$acsArray['Binding'] = \SAML2_Const::BINDING_HTTP_POST;
-					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
+					$acsArray['Binding'] = Constants::BINDING_HTTP_POST;
+					$acsArray['Location'] = \SimpleSAML\Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:1.0:profiles:browser-post':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:1.0:profiles:browser-post';
-					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml1-acs.php/' . $sourceId);
+					$acsArray['Location'] = \SimpleSAML\Module::getModuleURL('saml/sp/saml1-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact';
-					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
+					$acsArray['Location'] = \SimpleSAML\Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
 					break;
 				case 'urn:oasis:names:tc:SAML:1.0:profiles:artifact-01':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:1.0:profiles:artifact-01';
-					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL(
+					$acsArray['Location'] = \SimpleSAML\Module::getModuleURL(
 						'saml/sp/saml1-acs.php/' . $sourceId . '/artifact'
 					);
 					break;
 				case 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser':
 					$acsArray['Binding'] = 'urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser';
-					$acsArray['Location'] = \SimpleSAML_Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
-					$acsArray['hoksso:ProtocolBinding'] = \SAML2_Const::BINDING_HTTP_REDIRECT;
+					$acsArray['Location'] = \SimpleSAML\Module::getModuleURL('saml/sp/saml2-acs.php/' . $sourceId);
+					$acsArray['hoksso:ProtocolBinding'] = Constants::BINDING_HTTP_REDIRECT;
 					break;
 			}
 			$eps[] = $acsArray;
@@ -122,7 +129,7 @@ class SamlHelpers {
 		$metaArray20['AssertionConsumerService'] = $eps;
 
 		$keys = array();
-		$certInfo = \SimpleSAML_Utilities::loadPublicKey($spconfig, false, 'new_');
+		$certInfo = \SimpleSAML\Utils::loadPublicKey($spconfig, false, 'new_');
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$hasNewCert = true;
 
@@ -138,7 +145,7 @@ class SamlHelpers {
 			$hasNewCert = false;
 		}
 
-		$certInfo = \SimpleSAML_Utilities::loadPublicKey($spconfig);
+		$certInfo = \SimpleSAML\Utils::loadPublicKey($spconfig);
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$certData = $certInfo['certData'];
 
@@ -190,7 +197,7 @@ class SamlHelpers {
 
 			$metaArray20['OrganizationURL'] = $spconfig->getLocalizedString('OrganizationURL', null);
 			if ($metaArray20['OrganizationURL'] === null) {
-				throw new \SimpleSAML_Error_Exception(
+				throw new \SimpleSAML\Error\Exception(
 					'If OrganizationName is set, OrganizationURL must also be set.'
 				);
 			}
@@ -236,12 +243,16 @@ class SamlHelpers {
 			$metaArray20['RegistrationInfo'] = $spconfig->getArray('RegistrationInfo');
 		}
 
-		$supported_protocols = array('urn:oasis:names:tc:SAML:1.1:protocol', \SAML2_Const::NS_SAMLP);
+//		$supported_protocols = array('urn:oasis:names:tc:SAML:1.1:protocol', \SAML2\Const::NS_SAMLP);
+		$supported_protocols = [
+            'urn:oasis:names:tc:SAML:1.1:protocol',
+            Constants::NS_SAMLP
+        ];
 
 		$metaArray20['metadata-set'] = 'saml20-sp-remote';
 		$metaArray20['entityid'] = $entityId;
 
-		$metaBuilder = new \SimpleSAML_Metadata_SAMLBuilder($entityId);
+		$metaBuilder = new \SimpleSAML\Metadata\SAMLBuilder($entityId);
 		$metaBuilder->addMetadataSP20($metaArray20, $supported_protocols);
 		$metaBuilder->addOrganizationInfo($metaArray20);
 
@@ -261,10 +272,10 @@ class SamlHelpers {
 		unset($metaArray20['entityid']);
 
 		/* Sign the metadata if enabled. */
-		$xml = \SimpleSAML_Metadata_Signer::sign($xml, $spconfig->toArray(), 'SAML 2 SP');
+		$xml = \SimpleSAML\Metadata\Signer::sign($xml, $spconfig->toArray(), 'SAML 2 SP');
 
 		if (array_key_exists('output', $_REQUEST) && $_REQUEST['output'] == 'xhtml') {
-			$t = new \SimpleSAML_XHTML_Template($config, 'metadata.php', 'admin');
+			$t = new \SimpleSAML\XHTML\Template($config, 'metadata.php', 'admin');
 
 			$t->data['header'] = 'saml20-sp';
 			$t->data['metadata'] = htmlspecialchars($xml);
@@ -281,24 +292,24 @@ class SamlHelpers {
 	}
 
 	public static function acs($sourceId = 'dope-sp') {
-		$source = \SimpleSAML_Auth_Source::getById($sourceId, 'sspmod_saml_Auth_Source_SP');
+		$source = \SimpleSAML\Auth\Source::getById($sourceId, 'sspmod_saml_Auth_Source_SP');
 		$spMetadata = $source->getMetadata();
 
-		$b = \SAML2_Binding::getCurrentBinding();
-		if ($b instanceof \SAML2_HTTPArtifact) {
+		$b = \SAML2\Binding::getCurrentBinding();
+		if ($b instanceof \SAML2\HTTPArtifact) {
 			$b->setSPMetadata($spMetadata);
 		}
 
 		$response = $b->receive();
-		if (!($response instanceof \SAML2_Response)) {
-			throw new \SimpleSAML_Error_BadRequest('Invalid message received to AssertionConsumerService endpoint.');
+		if (!($response instanceof \SAML2\Response)) {
+			throw new \SimpleSAML\Error\BadRequest('Invalid message received to AssertionConsumerService endpoint.');
 		}
 
 		$idp = $response->getIssuer();
 		if ($idp === NULL) {
 			/* No Issuer in the response. Look for an unencrypted assertion with an issuer. */
 			foreach ($response->getAssertions() as $a) {
-				if ($a instanceof \SAML2_Assertion) {
+				if ($a instanceof \SAML2\Assertion) {
 					/* We found an unencrypted assertion - there should be an issuer here. */
 					$idp = $a->getIssuer();
 					break;
@@ -310,7 +321,7 @@ class SamlHelpers {
 			}
 		}
 
-		$session = \SimpleSAML_Session::getInstance();
+		$session = \SimpleSAML\Session::getInstance();
 		$prevAuth = $session->getAuthData($sourceId, 'saml:sp:prevAuth');
 		if ($prevAuth !== NULL && $prevAuth['id'] === $response->getId() && $prevAuth['issuer'] === $idp) {
 			/* OK, it looks like this message has the same issuer
@@ -320,8 +331,8 @@ class SamlHelpers {
 			 * In that case we may as well just redo the previous redirect
 			 * instead of displaying a confusing error message.
 			 */
-			\SimpleSAML_Logger::info('Duplicate SAML 2 response detected - ignoring the response and redirecting the user to the correct page.');
-			\SimpleSAML_Utilities::redirectTrustedURL($prevAuth['redirect']);
+			\SimpleSAML\Logger::info('Duplicate SAML 2 response detected - ignoring the response and redirecting the user to the correct page.');
+			\SimpleSAML\Utils::redirectTrustedURL($prevAuth['redirect']);
 		}
 
 		$idpMetadata = array();
@@ -330,18 +341,18 @@ class SamlHelpers {
 		if (!empty($stateId)) {
 
 			// sanitize the input
-			$sid = \SimpleSAML_Utilities::parseStateID($stateId);
+			$sid = \SimpleSAML\Utils::parseStateID($stateId);
 			if (!is_null($sid['url'])) {
-				\SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+				\SimpleSAML\Utils::checkURLAllowed($sid['url']);
 			}
 
 			/* This is a response to a request we sent earlier. */
-			$state = \SimpleSAML_Auth_State::loadState($stateId, 'saml:sp:sso');
+			$state = \SimpleSAML\Auth\State::loadState($stateId, 'saml:sp:sso');
 
 			/* Check that the authentication source is correct. */
 			assert('array_key_exists("saml:sp:AuthId", $state)');
 			if ($state['saml:sp:AuthId'] !== $sourceId) {
-				throw new \SimpleSAML_Error_Exception('The authentication source id in the URL does not match the authentication source which sent the request.');
+				throw new \SimpleSAML\Error\Exception('The authentication source id in the URL does not match the authentication source which sent the request.');
 			}
 
 			/* Check that the issuer is the one we are expecting. */
@@ -350,7 +361,7 @@ class SamlHelpers {
 				$idpMetadata = $source->getIdPMetadata($idp);
 				$idplist = $idpMetadata->getArrayize('IDPList', array());
 				if (!in_array($state['ExpectedIssuer'], $idplist)) {
-					throw new \SimpleSAML_Error_Exception('The issuer of the response does not match to the identity provider we sent the request to.');
+					throw new \SimpleSAML\Error\Exception('The issuer of the response does not match to the identity provider we sent the request to.');
 				}
 			}
 		} else {
@@ -358,22 +369,24 @@ class SamlHelpers {
 			$state = array(
 				'saml:sp:isUnsolicited' => TRUE,
 				'saml:sp:AuthId' => $sourceId,
-				'saml:sp:RelayState' => \SimpleSAML_Utilities::checkURLAllowed($response->getRelayState()),
+				'saml:sp:RelayState' => \SimpleSAML\Utils::checkURLAllowed($response->getRelayState()),
 			);
 		}
 
-		\SimpleSAML_Logger::debug('Received SAML2 Response from ' . var_export($idp, TRUE) . '.');
+		\SimpleSAML\Logger::debug('Received SAML2 Response from ' . var_export($idp, TRUE) . '.');
 
 		if (empty($idpMetadata)) {
 			$idpMetadata = $source->getIdPmetadata($idp);
 		}
 
 		try {
-			$assertions = \sspmod_saml_Message::processResponse($spMetadata, $idpMetadata, $response);
-		} catch (\sspmod_saml_Error $e) {
+//			$assertions = \sspmod_saml_Message::processResponse($spMetadata, $idpMetadata, $response);
+            $assertions = Message::processResponse($spMetadata, $idpMetadata, $response);
+//		} catch (\sspmod_saml_Error $e) {
+        } catch (Error $e) {
 			/* The status of the response wasn't "success". */
 			$e = $e->toException();
-			\SimpleSAML_Auth_State::throwException($state, $e);
+			\SimpleSAML\Auth\State::throwException($state, $e);
 		}
 
 
@@ -386,12 +399,12 @@ class SamlHelpers {
 		foreach ($assertions as $assertion) {
 
 			/* Check for duplicate assertion (replay attack). */
-			$store = \SimpleSAML_Store::getInstance();
+			$store = \SimpleSAML\Store::getInstance();
 			if ($store !== FALSE) {
 				$aID = $assertion->getId();
 				if ($store->get('saml.AssertionReceived', $aID) !== NULL) {
-					$e = new \SimpleSAML_Error_Exception('Received duplicate assertion.');
-					\SimpleSAML_Auth_State::throwException($state, $e);
+					$e = new \SimpleSAML\Error\Exception('Received duplicate assertion.');
+					\SimpleSAML\Auth\State::throwException($state, $e);
 				}
 
 				$notOnOrAfter = $assertion->getNotOnOrAfter();
@@ -427,8 +440,8 @@ class SamlHelpers {
 		}
 
 		if (!$foundAuthnStatement) {
-			$e = new \SimpleSAML_Error_Exception('No AuthnStatement found in assertion(s).');
-			\SimpleSAML_Auth_State::throwException($state, $e);
+			$e = new \SimpleSAML\Error\Exception('No AuthnStatement found in assertion(s).');
+			\SimpleSAML\Auth\State::throwException($state, $e);
 		}
 
 		if ($expire !== NULL) {
@@ -439,7 +452,8 @@ class SamlHelpers {
 		}
 
 		/* Register this session in the logout store. */
-		\sspmod_saml_SP_LogoutStore::addSession($sourceId, $nameId, $sessionIndex, $logoutExpire);
+//		\sspmod_saml_SP_LogoutStore::addSession($sourceId, $nameId, $sessionIndex, $logoutExpire);
+        LogoutStore::addSession($sourceId, $nameId, $sessionIndex, $logoutExpire);
 
 		/* We need to save the NameID and SessionIndex for logout. */
 		$logoutState = array(
