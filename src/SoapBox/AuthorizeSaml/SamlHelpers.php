@@ -1,5 +1,6 @@
 <?php namespace SoapBox\AuthorizeSaml;
 
+use SAML2\Utils;
 use SAML2\Constants;
 use SimpleSAML\Module\saml\Error;
 use SimpleSAML\Module\saml\Message;
@@ -13,7 +14,7 @@ class SamlHelpers {
 	public static function parseMetadata($xmldata) {
 		$config = \SimpleSAML\Configuration::getInstance();
 
-		\SimpleSAML\Utils::validateXMLDocument($xmldata, 'saml-meta');
+		Utils::validateXMLDocument($xmldata, 'saml-meta');
 		$entities = \SimpleSAML\Metadata\SAMLParser::parseDescriptorsString($xmldata);
 
 		/* Get all metadata for the entities. */
@@ -27,7 +28,7 @@ class SamlHelpers {
 		}
 
 		/* Transpose from $entities[entityid][type] to $output[type][entityid]. */
-		$output = \SimpleSAML\Utils::transposeArray($entities);
+		$output = Utils::transposeArray($entities);
 
 		return $output['saml20-idp-remote'];
 	}
@@ -129,7 +130,7 @@ class SamlHelpers {
 		$metaArray20['AssertionConsumerService'] = $eps;
 
 		$keys = array();
-		$certInfo = \SimpleSAML\Utils::loadPublicKey($spconfig, false, 'new_');
+		$certInfo = Utils::loadPublicKey($spconfig, false, 'new_');
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$hasNewCert = true;
 
@@ -145,7 +146,7 @@ class SamlHelpers {
 			$hasNewCert = false;
 		}
 
-		$certInfo = \SimpleSAML\Utils::loadPublicKey($spconfig);
+		$certInfo = Utils::loadPublicKey($spconfig);
 		if ($certInfo !== null && array_key_exists('certData', $certInfo)) {
 			$certData = $certInfo['certData'];
 
@@ -332,7 +333,7 @@ class SamlHelpers {
 			 * instead of displaying a confusing error message.
 			 */
 			\SimpleSAML\Logger::info('Duplicate SAML 2 response detected - ignoring the response and redirecting the user to the correct page.');
-			\SimpleSAML\Utils::redirectTrustedURL($prevAuth['redirect']);
+			Utils::redirectTrustedURL($prevAuth['redirect']);
 		}
 
 		$idpMetadata = array();
@@ -341,9 +342,9 @@ class SamlHelpers {
 		if (!empty($stateId)) {
 
 			// sanitize the input
-			$sid = \SimpleSAML\Utils::parseStateID($stateId);
+			$sid = Utils::parseStateID($stateId);
 			if (!is_null($sid['url'])) {
-				\SimpleSAML\Utils::checkURLAllowed($sid['url']);
+				Utils::checkURLAllowed($sid['url']);
 			}
 
 			/* This is a response to a request we sent earlier. */
@@ -369,7 +370,7 @@ class SamlHelpers {
 			$state = array(
 				'saml:sp:isUnsolicited' => TRUE,
 				'saml:sp:AuthId' => $sourceId,
-				'saml:sp:RelayState' => \SimpleSAML\Utils::checkURLAllowed($response->getRelayState()),
+				'saml:sp:RelayState' => Utils::checkURLAllowed($response->getRelayState()),
 			);
 		}
 
