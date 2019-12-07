@@ -1,15 +1,18 @@
 <?php
+
+use Webmozart\Assert\Assert;
+
 /**
  * Hook to run a cron job.
  *
  * @param array &$croninfo  Output
+ * @return void
  */
-
 function sanitycheck_hook_cron(&$croninfo)
 {
-    assert(is_array($croninfo));
-    assert(array_key_exists('summary', $croninfo));
-    assert(array_key_exists('tag', $croninfo));
+    Assert::isArray($croninfo);
+    Assert::keyExists($croninfo, 'summary');
+    Assert::keyExists($croninfo, 'tag');
 
     \SimpleSAML\Logger::info('cron [sanitycheck]: Running cron in cron tag ['.$croninfo['tag'].'] ');
 
@@ -35,7 +38,7 @@ function sanitycheck_hook_cron(&$croninfo)
                 $croninfo['summary'][] = 'Sanitycheck error: '.$err;
             }
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $croninfo['summary'][] = 'Error executing sanity check: '.$e->getMessage();
     }
 }

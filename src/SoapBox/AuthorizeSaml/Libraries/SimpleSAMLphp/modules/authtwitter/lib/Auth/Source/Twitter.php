@@ -2,7 +2,16 @@
 
 namespace SimpleSAML\Module\authtwitter\Auth\Source;
 
-require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/oauth/libextinc/OAuth.php');
+$default = dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/oauth/libextinc/OAuth.php';
+$travis = dirname(dirname(dirname(dirname(__FILE__)))).'/vendor/simplesamlphp/simplesamlphp/modules/oauth/libextinc/OAuth.php';
+
+if (file_exists($default)) {
+    require_once($default);
+} else if (file_exists($travis)) {
+    require_once($travis);
+} else {
+    // Probably codecov, but we can't raise an exception here or Travis will fail
+}
 
 /**
  * Authenticate using Twitter.
@@ -72,6 +81,7 @@ class Twitter extends \SimpleSAML\Auth\Source
      * Log-in using Twitter platform
      *
      * @param array &$state  Information about the current authentication.
+     * @return void
      */
     public function authenticate(&$state)
     {
@@ -103,6 +113,11 @@ class Twitter extends \SimpleSAML\Auth\Source
         $consumer->getAuthorizeRequest($url, $requestToken);
     }
 
+
+    /**
+     * @param array &$state
+     * @return void
+     */
     public function finalStep(&$state)
     {
         $requestToken = $state['authtwitter:authdata:requestToken'];

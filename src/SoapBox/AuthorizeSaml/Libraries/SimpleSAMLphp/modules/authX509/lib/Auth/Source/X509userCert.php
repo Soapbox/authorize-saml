@@ -13,18 +13,21 @@ class X509userCert extends \SimpleSAML\Auth\Source
 {
     /**
      * x509 attributes to use from the certificate for searching the user in the LDAP directory.
+     * @var array
      */
     private $x509attributes = ['UID' => 'uid'];
 
 
     /**
      * LDAP attribute containing the user certificate.
+     * This can be set to NULL to avoid looking up the certificate in LDAP
+     * @var array|null
      */
     private $ldapusercert = ['userCertificate;binary'];
 
 
     /**
-     * LDAPConfigHelper object
+     * @var \SimpleSAML\Module\ldap\ConfigHelper
      */
     private $ldapcf;
 
@@ -56,8 +59,6 @@ class X509userCert extends \SimpleSAML\Auth\Source
             $config,
             'Authentication source '.var_export($this->authId, true)
         );
-
-        return;
     }
 
 
@@ -67,6 +68,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
      * This function can be overloaded by a child authentication class that wish to perform some operations on failure.
      *
      * @param array &$state Information about the current authentication.
+     * @return void
      */
     public function authFailed(&$state)
     {
@@ -89,6 +91,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
      * page. On failure, The authX509:X509error.php template is loaded.
      *
      * @param array &$state Information about the current authentication.
+     * @return void
      */
     public function authenticate(&$state)
     {
@@ -100,8 +103,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
             $state['authX509.error'] = "NOCERT";
             $this->authFailed($state);
 
-            assert(false); // should never be reached
-            return;
+            throw new \Exception("Should never be reached");
         }
 
         $client_cert = $_SERVER['SSL_CLIENT_CERT'];
@@ -111,8 +113,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
             $state['authX509.error'] = "INVALIDCERT";
             $this->authFailed($state);
 
-            assert(false); // should never be reached
-            return;
+            throw new \Exception("Should never be reached");
         }
 
         $dn = null;
@@ -122,6 +123,10 @@ class X509userCert extends \SimpleSAML\Auth\Source
                 $value = $client_cert_data['subject'][$x509_attr];
                 \SimpleSAML\Logger::info('authX509: cert '.$x509_attr.' = '.$value);
                 $dn = $ldapcf->searchfordn($ldap_attr, $value, true);
+                /** 
+                 * Remove when SSP 1.18 is released
+                 * @psalm-suppress RedundantConditionGivenDocblockType
+                 */
                 if ($dn !== null) {
                     break;
                 }
@@ -133,8 +138,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
             $state['authX509.error'] = "UNKNOWNCERT";
             $this->authFailed($state);
 
-            assert(false); // should never be reached
-            return;
+            throw new \Exception("Should never be reached");
         }
 
         if ($this->ldapusercert === null) {
@@ -144,18 +148,17 @@ class X509userCert extends \SimpleSAML\Auth\Source
             $state['Attributes'] = $attributes;
             $this->authSuccesful($state);
 
-            assert(false); // should never be reached
-            return;
+            throw new \Exception("Should never be reached");
         }
 
         $ldap_certs = $ldapcf->getAttributes($dn, $this->ldapusercert);
-        if ($ldap_certs === false) {
+        
+        if (empty($ldap_certs)) {
             \SimpleSAML\Logger::error('authX509: no certificate found in LDAP for dn='.$dn);
             $state['authX509.error'] = "UNKNOWNCERT";
             $this->authFailed($state);
 
-            assert(false); // should never be reached
-            return;
+            throw new \Exception("Should never be reached");
         }
 
 
@@ -179,8 +182,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
                 $state['Attributes'] = $attributes;
                 $this->authSuccesful($state);
 
-                assert(false); // should never be reached
-                return;
+                throw new \Exception("Should never be reached");
             }
         }
 
@@ -188,8 +190,7 @@ class X509userCert extends \SimpleSAML\Auth\Source
         $state['authX509.error'] = "UNKNOWNCERT";
         $this->authFailed($state);
 
-        assert(false); // should never be reached
-        return;
+        throw new \Exception("Should never be reached");
     }
 
 
@@ -199,12 +200,12 @@ class X509userCert extends \SimpleSAML\Auth\Source
      * This function can be overloaded by a child authentication class that wish to perform some operations after login.
      *
      * @param array &$state Information about the current authentication.
+     * @return void
      */
     public function authSuccesful(&$state)
     {
         \SimpleSAML\Auth\Source::completeAuth($state);
 
-        assert(false); // should never be reached
-        return;
+        throw new \Exception("Should never be reached");
     }
 }

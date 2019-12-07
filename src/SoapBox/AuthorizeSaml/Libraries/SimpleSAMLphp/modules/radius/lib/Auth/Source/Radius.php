@@ -9,64 +9,64 @@ namespace SimpleSAML\Module\radius\Auth\Source;
  *
  * @package SimpleSAMLphp
  */
-
 class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
 {
     /**
-     * The list of radius servers to use.
+     * @var array The list of radius servers to use.
      */
     private $servers;
 
     /**
-     * The hostname of the radius server.
+     * @var string The hostname of the radius server.
      */
     private $hostname;
 
     /**
-     * The port of the radius server.
+     * @var int The port of the radius server.
      */
     private $port;
 
     /**
-     * The secret used when communicating with the radius server.
+     * @var string The secret used when communicating with the radius server.
      */
     private $secret;
 
     /**
-     * The timeout for contacting the radius server.
+     * @var int The timeout for contacting the radius server.
      */
     private $timeout;
 
     /**
-     * The number of retries which should be attempted.
+     * @var int The number of retries which should be attempted.
      */
     private $retries;
 
     /**
-     * The realm to be added to the entered username.
+     * Var string The realm to be added to the entered username.
      */
     private $realm;
 
     /**
-     * The attribute name where the username should be stored.
+     * @var string|null The attribute name where the username should be stored.
      */
-    private $usernameAttribute;
+    private $usernameAttribute = null;
 
     /**
-     * The vendor for the RADIUS attributes we are interrested in.
+     * @var string|null The vendor for the RADIUS attributes we are interrested in.
      */
-    private $vendor;
+    private $vendor = null;
 
     /**
-     * The vendor-specific attribute for the RADIUS attributes we are
-     * interrested in.
+     * @var string The vendor-specific attribute for the RADIUS attributes we are
+     *     interrested in.
      */
     private $vendorType;
 
     /**
-     * The NAS-Identifier that should be set in Access-Request packets.
+     * @var string|null The NAS-Identifier that should be set in Access-Request packets.
      */
-    private $nasIdentifier;
+    private $nasIdentifier = null;
+
 
     /**
      * Constructor for this authentication source.
@@ -83,35 +83,35 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
         parent::__construct($info, $config);
 
         // Parse configuration.
-        $config = \SimpleSAML\Configuration::loadFromArray(
+        $cfg = \SimpleSAML\Configuration::loadFromArray(
             $config,
-            'Authentication source '.var_export($this->authId, true)
+            'Authentication source ' . var_export($this->authId, true)
         );
 
-        $this->servers = $config->getArray('servers', []);
+        $this->servers = $cfg->getArray('servers', []);
         // For backwards compatibility
         if (empty($this->servers)) {
-            $this->hostname = $config->getString('hostname');
-            $this->port = $config->getIntegerRange('port', 1, 65535, 1812);
-            $this->secret = $config->getString('secret');
+            $this->hostname = $cfg->getString('hostname');
+            $this->port = $cfg->getIntegerRange('port', 1, 65535, 1812);
+            $this->secret = $cfg->getString('secret');
             $this->servers[] = [
                 'hostname' => $this->hostname,
                 'port' => $this->port,
                 'secret' => $this->secret
             ];
         }
-        $this->timeout = $config->getInteger('timeout', 5);
-        $this->retries = $config->getInteger('retries', 3);
-        $this->realm = $config->getString('realm', null);
-        $this->usernameAttribute = $config->getString('username_attribute', null);
-        $this->nasIdentifier = $config->getString(
+        $this->timeout = $cfg->getInteger('timeout', 5);
+        $this->retries = $cfg->getInteger('retries', 3);
+        $this->realm = $cfg->getString('realm', null);
+        $this->usernameAttribute = $cfg->getString('username_attribute', null);
+        $this->nasIdentifier = $cfg->getString(
             'nas_identifier',
             \SimpleSAML\Utils\HTTP::getSelfHost()
         );
 
-        $this->vendor = $config->getInteger('attribute_vendor', null);
+        $this->vendor = $cfg->getInteger('attribute_vendor', null);
         if ($this->vendor !== null) {
-            $this->vendorType = $config->getInteger('attribute_vendor_type');
+            $this->vendorType = $cfg->getInteger('attribute_vendor_type');
         }
     }
 
@@ -121,7 +121,7 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
      *
      * @param string $username  The username the user wrote.
      * @param string $password  The password the user wrote.
-     * @return array  Associative array with the user's attributes.
+     * @return array[] Associative array with the user's attributes.
      */
     protected function login($username, $password)
     {
@@ -129,6 +129,9 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
         assert(is_string($password));
 
         $radius = radius_auth_open();
+        if (!is_resource($radius)) {
+            throw new \Exception("Insufficient memory available to create handle.");
+        }
 
         // Try to add all radius servers, trigger a failure if no one works
         $success = false;
@@ -136,16 +139,18 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
             if (!isset($server['port'])) {
                 $server['port'] = 1812;
             }
-            if (!radius_add_server(
-                $radius,
-                $server['hostname'],
-                $server['port'],
-                $server['secret'],
-                $this->timeout,
-                $this->retries
-            )) {
+            if (
+                !radius_add_server(
+                    $radius,
+                    $server['hostname'],
+                    $server['port'],
+                    $server['secret'],
+                    $this->timeout,
+                    $this->retries
+                )
+            ) {
                 \SimpleSAML\Logger::info(
-                    "Could not add radius server: ".radius_strerror($radius)
+                    "Could not add radius server: " . radius_strerror($radius)
                 );
                 continue;
             }
@@ -157,14 +162,14 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
 
         if (!radius_create_request($radius, \RADIUS_ACCESS_REQUEST)) {
             throw new \Exception(
-                'Error creating radius request: '.radius_strerror($radius)
+                'Error creating radius request: ' . radius_strerror($radius)
             );
         }
 
         if ($this->realm === null) {
             radius_put_attr($radius, \RADIUS_USER_NAME, $username);
         } else {
-            radius_put_attr($radius, \RADIUS_USER_NAME, $username.'@'.$this->realm);
+            radius_put_attr($radius, \RADIUS_USER_NAME, $username . '@' . $this->realm);
         }
         radius_put_attr($radius, \RADIUS_USER_PASSWORD, $password);
 
@@ -182,7 +187,7 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
                     throw new \Exception('Radius authentication error: Challenge requested, but not supported.');
                 default:
                     throw new \Exception(
-                        'Error during radius authentication: '.radius_strerror($radius)
+                        'Error during radius authentication: ' . radius_strerror($radius)
                     );
             }
         }
@@ -190,9 +195,10 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
         // If we get this far, we have a valid login
 
         $attributes = [];
+        $usernameAttribute = $this->usernameAttribute;
 
-        if ($this->usernameAttribute !== null) {
-            $attributes[$this->usernameAttribute] = [$username];
+        if ($usernameAttribute !== null) {
+            $attributes[$usernameAttribute] = [$username];
         }
 
         if ($this->vendor === null) {
@@ -207,13 +213,13 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
         while ($resa = radius_get_attr($radius)) {
             if (!is_array($resa)) {
                 throw new \Exception(
-                    'Error getting radius attributes: '.radius_strerror($radius)
+                    'Error getting radius attributes: ' . radius_strerror($radius)
                 );
             }
 
             // Use the received user name
-            if ($resa['attr'] == \RADIUS_USER_NAME) {
-                $attributes[$this->usernameAttribute] = [$resa['data']];
+            if ($resa['attr'] === \RADIUS_USER_NAME && $usernameAttribute !== null) {
+                $attributes[$usernameAttribute] = [$resa['data']];
                 continue;
             }
 
@@ -222,9 +228,9 @@ class Radius extends \SimpleSAML\Module\core\Auth\UserPassBase
             }
 
             $resv = radius_get_vendor_attr($resa['data']);
-            if (!is_array($resv)) {
+            if ($resv === false) {
                 throw new \Exception(
-                    'Error getting vendor specific attribute: '.radius_strerror($radius)
+                    'Error getting vendor specific attribute: ' . radius_strerror($radius)
                 );
             }
 

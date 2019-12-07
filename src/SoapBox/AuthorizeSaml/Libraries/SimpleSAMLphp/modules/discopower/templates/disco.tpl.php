@@ -1,22 +1,29 @@
 <?php
 
 $this->data['header'] = $this->t('selectidp');
-$this->data['jquery'] = ['core' => true, 'ui' => true, 'css' => true];
 
 $this->data['head'] = '<link rel="stylesheet" media="screen" type="text/css" href="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/css/uitheme1.12.1/jquery-ui.min.css').'" />';
+$this->data['head'] .= '<link rel="stylesheet" media="screen" type="text/css" href="'.
     SimpleSAML\Module::getModuleURL('discopower/assets/css/disco.css').'" />';
-
-$this->data['head'] .= '<script type="text/javascript" src="'.
-    SimpleSAML\Module::getModuleURL('discopower/assets/js/jquery.livesearch.js').'"></script>'."\n";
-$this->data['head'] .= '<script type="text/javascript" src="'.
-    SimpleSAML\Module::getModuleURL('discopower/assets/js/'.$this->data['score'].'.js').'"></script>'."\n";
-$this->data['head'] .= $this->data['search'];
 
 if (!empty($this->data['faventry'])) {
     $this->data['autofocus'] = 'favouritesubmit';
 }
 
 $this->includeAtTemplateBase('includes/header.php');
+
+$this->data['htmlinject']['htmlContentPost'][] = '<script type="text/javascript" src="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/js/jquery-1.12.4.min.js').'"></script>'."\n";
+$this->data['htmlinject']['htmlContentPost'][] = '<script type="text/javascript" src="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/js/jquery-ui-1.12.1.min.js').'"></script>'."\n";
+$this->data['htmlinject']['htmlContentPost'][] = '<script type="text/javascript" src="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/js/jquery.livesearch.js').'"></script>'."\n";
+$this->data['htmlinject']['htmlContentPost'][] = '<script type="text/javascript" src="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/js/'.$this->data['score'].'.js').'"></script>'."\n";
+$this->data['htmlinject']['htmlContentPost'][] = '<script type="text/javascript" src="'.
+    SimpleSAML\Module::getModuleURL('discopower/assets/js/tablist.js').'"></script>'."\n";
+
 
 function showEntry($t, $metadata, $favourite = false)
 {

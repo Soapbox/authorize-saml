@@ -2,25 +2,21 @@
 
 namespace SimpleSAML\Module\statistics\Graph;
 
-/*
+/**
  * \SimpleSAML\Module\statistics\Graph\GoogleCharts will help you to create a Google Chart
  * using the Google Charts API.
  *
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
  * @package SimpleSAMLphp
  */
-
 class GoogleCharts
 {
-    /**
-     * @var integer
-     */
+    /** @var integer */
     private $x;
 
-    /**
-     * @var integer
-     */
+    /** @var integer */
     private $y;
+
 
     /**
      * Constructor.
@@ -36,27 +32,41 @@ class GoogleCharts
         $this->y = $y;
     }
 
-    private function encodeaxis($axis)
+
+    /**
+     * @param array $axis
+     * @return string
+     */
+    private function encodeaxis(array $axis)
     {
         return join('|', $axis);
     }
 
-    // t:10.0,58.0,95.0
-    private function encodedata($datasets)
+    /**
+     * t:10.0,58.0,95.0
+     * @param array $datasets
+     * @return string
+     */
+    private function encodedata(array $datasets)
     {
         $setstr = [];
         foreach ($datasets as $dataset) {
             $setstr[] = self::extEncode($dataset);
         }
-        return 'e:'.join(',', $setstr);
+        return 'e:' . join(',', $setstr);
     }
 
-    public static function extEncode($values) // $max = 4095, $min = 0
+
+    /**
+     * @param array $values
+     * @return string
+     */
+    public static function extEncode(array $values) // $max = 4095, $min = 0
     {
         $extended_table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.';
         $chardata = '';
         $delta = 4095;
-        $size = (strlen($extended_table));
+        $size = strlen($extended_table);
 
         foreach ($values as $k => $v) {
             if ($v >= 0 && $v <= 100) {
@@ -70,64 +80,73 @@ class GoogleCharts
         return $chardata;
     }
 
+
     /**
      * Generate a Google Charts URL which points to a generated image.
      * More documentation on Google Charts here:
      *   http://code.google.com/apis/chart/
      *
-     * @param string $axis        Axis
-     * @param string $axpis       Axis positions
+     * @param array $axis        Axis
+     * @param array $axispos     Axis positions
      * @param array $datasets    Datasets values
-     * @param integer $max         Max value. Will be the topmost value on the Y-axis.
+     * @param array $maxes       Max value. Will be the topmost value on the Y-axis.
+     * @return string
      */
-    public function show($axis, $axispos, $datasets, $maxes)
+    public function show(array $axis, array $axispos, array $datasets, array $maxes)
     {
-        $labeld = '&chxt=x,y'.'&chxr=0,0,1|1,0,'.$maxes[0];
+        $labeld = '&chxt=x,y' . '&chxr=0,0,1|1,0,' . $maxes[0];
         if (count($datasets) > 1) {
             if (count($datasets) !== count($maxes)) {
                 throw new \Exception('Incorrect number of max calculations for graph plotting.');
             }
-            $labeld = '&chxt=x,y,r'.'&chxr=0,0,1|1,0,'.$maxes[0].'|2,0,'.$maxes[1];
+            $labeld = '&chxt=x,y,r' . '&chxr=0,0,1|1,0,' . $maxes[0] . '|2,0,' . $maxes[1];
         }
 
-        $url = 'https://chart.apis.google.com/chart?'.
+        $url = 'https://chart.apis.google.com/chart?' .
             // Dimension of graph. Default is 800x350
-            'chs='.$this->x.'x'.$this->y.
+            'chs=' . $this->x . 'x' . $this->y .
 
             // Dateset values
-            '&chd='.$this->encodedata($datasets).
+            '&chd=' . $this->encodedata($datasets) .
 
             // Fill area...
-            '&chco=ff5c00,cca600'.
-            '&chls=1,1,0|1,6,3'.
+            '&chco=ff5c00,cca600' .
+            '&chls=1,1,0|1,6,3' .
 
             // chart type is linechart
-            '&cht=lc'.
-            $labeld.
-            '&chxl=0:|'.$this->encodeaxis($axis).#.$'|1:||top'.
-            '&chxp=0,'.join(',', $axispos).
-            '&chg='.(2400 / (count($datasets[0]) - 1)).',-1,3,3'; // lines
+            '&cht=lc' .
+            $labeld .
+            '&chxl=0:|' . $this->encodeaxis($axis) . #.$'|1:||top' .
+            '&chxp=0,' . join(',', $axispos) .
+            '&chg=' . (2400 / (count($datasets[0]) - 1)) . ',-1,3,3'; // lines
 
         return $url;
     }
 
-    public function showPie($axis, $datasets)
+
+    /**
+     * @param array $axis
+     * @param array $datasets
+     * @return string
+     */
+    public function showPie(array $axis, array $datasets)
     {
-        $url = 'https://chart.apis.google.com/chart?'.
+        $url = 'https://chart.apis.google.com/chart?' .
 
         // Dimension of graph. Default is 800x350
-        'chs='.$this->x.'x'.$this->y.
+        'chs=' . $this->x . 'x' . $this->y .
 
         // Dateset values.
-        '&chd='.$this->encodedata([$datasets]).
+        '&chd=' . $this->encodedata([$datasets]) .
 
         // chart type is linechart
-        '&cht=p'.
+        '&cht=p' .
 
-        '&chl='.$this->encodeaxis($axis);
+        '&chl=' . $this->encodeaxis($axis);
 
         return $url;
     }
+
 
     /**
      * Takes a input value, and generates a value that suits better as a max
@@ -145,7 +164,8 @@ class GoogleCharts
      *      }
      * </code>
      *
-     * @param integer $max    Input value.
+     * @param int $max    Input value.
+     * @return int
      */
     public static function roof($max)
     {

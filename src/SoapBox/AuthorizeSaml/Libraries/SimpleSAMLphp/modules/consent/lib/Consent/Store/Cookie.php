@@ -89,7 +89,7 @@ class Cookie extends \SimpleSAML\Module\consent\Store
      * @param string $destinationId A string which identifies the destination.
      * @param string $attributeSet  A hash which identifies the attributes.
      *
-     * @return void
+     * @return bool
      */
     public function saveConsent($userId, $destinationId, $attributeSet)
     {
@@ -103,7 +103,7 @@ class Cookie extends \SimpleSAML\Module\consent\Store
         \SimpleSAML\Logger::debug('Consent cookie - Set ['.$value.']');
 
         $value = self::sign($value);
-        $this->setConsentCookie($name, $value);
+        return $this->setConsentCookie($name, $value);
     }
 
 
@@ -269,12 +269,12 @@ class Cookie extends \SimpleSAML\Module\consent\Store
      * @param string      $name  Name of the cookie.
      * @param string|null $value Value of the cookie. Set this to null to delete the cookie.
      *
-     * @return void
+     * @return bool
      */
     private function setConsentCookie($name, $value)
     {
         assert(is_string($name));
-        assert(is_string($value) || $value === null);
+        assert(is_string($value) || is_null($value));
 
         $globalConfig = \SimpleSAML\Configuration::getInstance();
         $params = [
@@ -284,6 +284,11 @@ class Cookie extends \SimpleSAML\Module\consent\Store
             'secure' => \SimpleSAML\Utils\HTTP::isHTTPS(),
         ];
 
-        \SimpleSAML\Utils\HTTP::setCookie($name, $value, $params, false);
+        try {
+            \SimpleSAML\Utils\HTTP::setCookie($name, $value, $params, false);
+            return true;
+        } catch (\SimpleSAML\Error\CannotSetCookie $e) {
+            return false;
+        }
     }
 }

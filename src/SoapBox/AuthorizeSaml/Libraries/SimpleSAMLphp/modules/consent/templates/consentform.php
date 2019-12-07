@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template form for giving consent.
  *
@@ -9,6 +10,7 @@
  *
  * @package SimpleSAMLphp
  */
+
 assert(is_string($this->data['yesTarget']));
 assert(is_string($this->data['noTarget']));
 assert($this->data['sppp'] === false || is_string($this->data['sppp']));

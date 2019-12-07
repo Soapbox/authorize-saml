@@ -186,7 +186,7 @@ class ConfigHelper
             throw new \SimpleSAML\Error\Error('WRONGUSERPASS');
         }
 
-        $ldap = new \SimpleSAML\Auth\LDAP(
+        $ldap = new Auth\Ldap(
             $this->hostname,
             $this->enableTLS,
             $this->debug,
@@ -205,6 +205,10 @@ class ConfigHelper
                 }
             }
 
+            /**
+             * PHPdoc changed in SSP 1.18; Remove it after release
+             * @var string|null $dn
+             */
             $dn = $ldap->searchfordn(
                 $this->searchBase,
                 $this->searchAttributes,
@@ -213,6 +217,7 @@ class ConfigHelper
                 $this->searchFilter,
                 $this->searchScope
             );
+
             if ($dn === null) {
                 /* User not found with search. */
                 \SimpleSAML\Logger::info($this->location.': Unable to find users DN. username=\''.$username.'\'');
@@ -253,7 +258,7 @@ class ConfigHelper
      * @param bool $allowZeroHits
      * Determines if the method will throw an exception if no
      * hits are found. Defaults to FALSE.
-     * @return string
+     * @return string|null
      * The DN of the matching element, if found. If no element was
      * found and $allowZeroHits is set to FALSE, an exception will
      * be thrown; otherwise NULL will be returned.
@@ -266,7 +271,7 @@ class ConfigHelper
      */
     public function searchfordn($attribute, $value, $allowZeroHits)
     {
-        $ldap = new \SimpleSAML\Auth\LDAP(
+        $ldap = new Auth\Ldap(
             $this->hostname,
             $this->enableTLS,
             $this->debug,
@@ -295,13 +300,20 @@ class ConfigHelper
         );
     }
 
+
+    /**
+     * @param string $dn
+     * @param array|null $attributes
+     * @return array
+     * @throws \Exception
+     */
     public function getAttributes($dn, $attributes = null)
     {
         if ($attributes == null) {
             $attributes = $this->attributes;
         }
 
-        $ldap = new \SimpleSAML\Auth\LDAP(
+        $ldap = new Auth\Ldap(
             $this->hostname,
             $this->enableTLS,
             $this->debug,

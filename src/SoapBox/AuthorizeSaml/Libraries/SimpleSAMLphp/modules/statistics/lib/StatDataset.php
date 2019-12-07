@@ -2,37 +2,65 @@
 
 namespace SimpleSAML\Module\statistics;
 
+use SimpleSAML\Configuration;
+use SimpleSAML\Module;
+use SimpleSAML\Utils\Arrays;
+use SimpleSAML\XHTML\Template;
+
 /**
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
  * @package SimpleSAMLphp
  */
-
 class StatDataset
 {
+    /** @var \SimpleSAML\Configuration */
     protected $statconfig;
+
+    /** @var \SimpleSAML\Configuration */
     protected $ruleconfig;
+
+    /** @var \SimpleSAML\Configuration */
     protected $timeresconfig;
+
+    /** @var string */
     protected $ruleid;
 
+    /** @var int */
     protected $fileslot;
+
+    /** @var string */
     protected $timeres;
 
+    /** @var string */
     protected $delimiter;
+
+    /** @var array */
     protected $results;
+
+    /** @var array */
     protected $summary;
+
+    /** @var int */
     protected $max;
 
+    /** @var \SimpleSAML\Module\statistics\DateHandler */
     protected $datehandlerFile;
+
+    /** @var \SimpleSAML\Module\statistics\DateHandler */
     protected $datehandlerTick;
 
 
     /**
      * Constructor
+     *
+     * @param \SimpleSAML\Configuration $statconfig
+     * @param \SimpleSAML\Configuration $ruleconfig
+     * @param string $ruleid
+     * @param string $timeres
+     * @param int $fileslot
      */
-    public function __construct($statconfig, $ruleconfig, $ruleid, $timeres, $fileslot)
+    public function __construct(Configuration $statconfig, Configuration $ruleconfig, $ruleid, $timeres, $fileslot)
     {
-        assert($statconfig instanceof \SimpleSAML\Configuration);
-        assert($ruleconfig instanceof \SimpleSAML\Configuration);
         $this->statconfig = $statconfig;
         $this->ruleconfig = $ruleconfig;
 
@@ -45,6 +73,8 @@ class StatDataset
 
         $this->delimiter = '_';
         $this->max = 0;
+        $this->results = [];
+        $this->summary = [];
 
         $this->datehandlerTick = new DateHandler($this->statconfig->getValue('offset', 0));
         if ($this->timeresconfig->getValue('customDateHandler', 'default') === 'month') {
@@ -56,16 +86,29 @@ class StatDataset
         $this->loadData();
     }
 
+
+    /**
+     * @return int
+     */
     public function getFileSlot()
     {
         return $this->fileslot;
     }
 
+
+    /**
+     * @return string
+     */
     public function getTimeRes()
     {
         return $this->timeres;
     }
 
+
+    /**
+     * @param string $delimiter
+     * @return void
+     */
     public function setDelimiter($delimiter = '_')
     {
         if (empty($delimiter)) {
@@ -74,6 +117,10 @@ class StatDataset
         $this->delimiter = $delimiter;
     }
 
+
+    /**
+     * @return string|null
+     */
     public function getDelimiter()
     {
         if ($this->delimiter === '_') {
@@ -82,6 +129,10 @@ class StatDataset
         return $this->delimiter;
     }
 
+
+    /**
+     * @return void
+     */
     public function calculateMax()
     {
         $maxvalue = 0;
@@ -94,6 +145,10 @@ class StatDataset
         $this->max = Graph\GoogleCharts::roof($maxvalue);
     }
 
+
+    /**
+     * @return array
+     */
     public function getDebugData()
     {
         $debugdata = [];
@@ -110,6 +165,10 @@ class StatDataset
         return $debugdata;
     }
 
+
+    /**
+     * @return void
+     */
     public function aggregateSummary()
     {
         // aggregate summary table from dataset. To be used in the table view
@@ -127,6 +186,10 @@ class StatDataset
         $this->summary = array_reverse($this->summary, true);
     }
 
+
+    /**
+     * @return array
+     */
     public function getTopDelimiters()
     {
         // create a list of delimiter keys that has the highest total summary in this period
@@ -144,6 +207,10 @@ class StatDataset
         return $topdelimiters;
     }
 
+
+    /**
+     * @return array
+     */
     public function availDelimiters()
     {
         $availDelimiters = [];
@@ -153,6 +220,10 @@ class StatDataset
         return array_keys($availDelimiters);
     }
 
+
+    /**
+     * @return array
+     */
     public function getPieData()
     {
         $piedata = [];
@@ -167,21 +238,37 @@ class StatDataset
         return $piedata;
     }
 
+
+    /**
+     * @return int
+     */
     public function getMax()
     {
         return $this->max;
     }
 
+
+    /**
+     * @return array
+     */
     public function getSummary()
     {
         return $this->summary;
     }
 
+
+    /**
+     * @return array
+     */
     public function getResults()
     {
         return $this->results;
     }
 
+
+    /**
+     * @return array
+     */
     public function getAxis()
     {
         $slotsize = $this->timeresconfig->getValue('slot');
@@ -195,11 +282,14 @@ class StatDataset
         $i = 0;
 
         foreach ($this->results as $slot => $res) {
+            $slot = intval($slot);
+
             // check if there should be an axis here...
             if ($slot % $axislabelint == 0) {
                 $axis[] = $this->datehandlerTick->prettyDateSlot($slot, $slotsize, $dateformat_intra);
                 $axispos[] = (($i) / ($xentries - 1));
             }
+
             $lastslot = $slot;
             $i++;
         }
@@ -209,8 +299,10 @@ class StatDataset
         return ['axis' => $axis, 'axispos' => $axispos];
     }
 
-    /*
+
+    /**
      * Walk through dataset to get percent values from max into dataset[].
+     * @return array
      */
     public function getPercentValues()
     {
@@ -232,22 +324,27 @@ class StatDataset
         return $dataset;
     }
 
+
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getDelimiterPresentation()
     {
-        $config = \SimpleSAML\Configuration::getInstance();
-        $t = new \SimpleSAML\XHTML\Template($config, 'statistics:statistics.tpl.php');
+        $config = Configuration::getInstance();
+        $t = new Template($config, 'statistics:statistics.tpl.php');
 
         $availdelimiters = $this->availDelimiters();
 
         // create a delimiter presentation filter for this rule...
         if ($this->ruleconfig->hasValue('fieldPresentation')) {
             $fieldpresConfig = $this->ruleconfig->getConfigItem('fieldPresentation');
-            $classname = \SimpleSAML\Module::resolveClass(
+            $classname = Module::resolveClass(
                 $fieldpresConfig->getValue('class'),
                 'Statistics\FieldPresentation'
             );
             if (!class_exists($classname)) {
-                throw new \Exception('Could not find field presentation plugin ['.$classname.']: No class found');
+                throw new \Exception('Could not find field presentation plugin [' . $classname . ']: No class found');
             }
             $presentationHandler = new $classname($availdelimiters, $fieldpresConfig->getValue('config'), $t);
 
@@ -257,6 +354,10 @@ class StatDataset
         return [];
     }
 
+
+    /**
+     * @return array
+     */
     public function getDelimiterPresentationPie()
     {
         $topdelimiters = $this->getTopDelimiters();
@@ -274,24 +375,28 @@ class StatDataset
         return $pieaxis;
     }
 
+
+    /**
+     * @return void
+     */
     public function loadData()
     {
         $statdir = $this->statconfig->getValue('statdir');
         $resarray = [];
-        $rules = \SimpleSAML\Utils\Arrays::arrayize($this->ruleid);
+        $rules = Arrays::arrayize($this->ruleid);
         foreach ($rules as $rule) {
             // Get file and extract results.
-            $resultFileName = $statdir.'/'.$rule.'-'.$this->timeres.'-'.$this->fileslot.'.stat';
+            $resultFileName = $statdir . '/' . $rule . '-' . $this->timeres . '-' . $this->fileslot . '.stat';
             if (!file_exists($resultFileName)) {
-                throw new \Exception('Aggregated statitics file ['.$resultFileName.'] not found.');
+                throw new \Exception('Aggregated statitics file [' . $resultFileName . '] not found.');
             }
             if (!is_readable($resultFileName)) {
-                throw new \Exception('Could not read statitics file ['.$resultFileName.']. Bad file permissions?');
+                throw new \Exception('Could not read statitics file [' . $resultFileName . ']. Bad file permissions?');
             }
             $resultfile = file_get_contents($resultFileName);
             $newres = unserialize($resultfile);
             if (empty($newres)) {
-                throw new \Exception('Aggregated statistics in file ['.$resultFileName.'] was empty.');
+                throw new \Exception('Aggregated statistics in file [' . $resultFileName . '] was empty.');
             }
             $resarray[] = $newres;
         }
@@ -304,5 +409,14 @@ class StatDataset
             }
         }
         $this->results = $combined;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function combine(array $combined, array $resarray)
+    {
+        return array_merge($combined, $resarray);
     }
 }

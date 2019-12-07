@@ -4,8 +4,8 @@
  * Hook to run a cron job.
  *
  * @param array &$croninfo  Output
+ * @return void
  */
-
 function statistics_hook_cron(&$croninfo)
 {
     assert(is_array($croninfo));
@@ -35,7 +35,7 @@ function statistics_hook_cron(&$croninfo)
             $aggregator->store($results);
         }
     } catch (\Exception $e) {
-        $message = 'Loganalyzer threw exception: '.$e->getMessage();
+        $message = 'Loganalyzer threw exception: ' . $e->getMessage();
         \SimpleSAML\Logger::warning($message);
         $croninfo['summary'][] = $message;
     }

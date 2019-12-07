@@ -2,6 +2,8 @@
 
 namespace SimpleSAML\Module\ldap\Auth\Process;
 
+use SimpleSAML\Utils\Arrays;
+
 /**
  * Does a reverse membership lookup on the logged in user,
  * looking for groups it is a member of and adds them to
@@ -10,7 +12,6 @@ namespace SimpleSAML\Module\ldap\Auth\Process;
  * @author Ryan Panning <panman@traileyes.com>
  * @package SimpleSAMLphp
  */
-
 class AttributeAddUsersGroups extends BaseFilter
 {
     /**
@@ -21,6 +22,7 @@ class AttributeAddUsersGroups extends BaseFilter
      *
      * @throws \SimpleSAML\Error\Exception
      * @param $request
+     * @return void
      */
     public function process(&$request)
     {
@@ -319,7 +321,7 @@ class AttributeAddUsersGroups extends BaseFilter
             ' Member Attribute: '.$map['member'].
             ' Type Attribute: '.$map['type'].
             ' Type Value: '.$this->type_map['group'].
-            ' Base: '.implode('; ', $this->base_dn)
+            ' Base: '.implode('; ', Arrays::Arrayize($this->base_dn))
         );
 
         // AD connections should have this set

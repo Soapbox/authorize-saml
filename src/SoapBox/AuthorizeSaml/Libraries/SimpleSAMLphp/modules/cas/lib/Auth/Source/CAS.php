@@ -2,6 +2,8 @@
 
 namespace SimpleSAML\Module\cas\Auth\Source;
 
+use Webmozart\Assert\Assert;
+
 /**
  * Authenticate using CAS.
  *
@@ -29,7 +31,7 @@ class CAS extends \SimpleSAML\Auth\Source
     private $ldapConfig;
 
     /**
-     * @var cas configuration
+     * @var array cas configuration
      */
     private $casConfig;
 
@@ -52,8 +54,8 @@ class CAS extends \SimpleSAML\Auth\Source
      */
     public function __construct($info, $config)
     {
-        assert(is_array($info));
-        assert(is_array($config));
+        Assert::isArray($info);
+        Assert::isArray($config);
 
         // Call the parent constructor first, as required by the interface
         parent::__construct($info, $config);
@@ -100,6 +102,8 @@ class CAS extends \SimpleSAML\Auth\Source
             'service' => $service,
         ]);
         $result = \SimpleSAML\Utils\HTTP::fetch($url);
+
+        /** @var string $result */
         $res = preg_split("/\r?\n/", $result);
 
         if (strcmp($res[0], "yes") == 0) {
@@ -129,6 +133,7 @@ class CAS extends \SimpleSAML\Auth\Source
         );
         $result = \SimpleSAML\Utils\HTTP::fetch($url);
 
+        /** @var string $result */
         $dom = \SAML2\DOMDocumentFactory::fromString($result);
         $xPath = new \DOMXpath($dom);
         $xPath->registerNamespace("cas", 'http://www.yale.edu/tp/cas');
@@ -147,7 +152,12 @@ class CAS extends \SimpleSAML\Auth\Source
                     }
                 }
             }
-            $casusername = $success->item(0)->textContent;
+
+            $item = $success->item(0);
+            if (is_null($item)) {
+                throw new \Exception("Error parsing serviceResponse.");
+            }
+            $casusername = $item->textContent;
 
             return [$casusername, $attributes];
         }
@@ -178,6 +188,7 @@ class CAS extends \SimpleSAML\Auth\Source
     /**
      * Called by linkback, to finish validate/ finish logging in.
      * @param array $state
+     * @return void
      */
     public function finalStep(&$state)
     {
@@ -192,7 +203,7 @@ class CAS extends \SimpleSAML\Auth\Source
             'Authentication source '.var_export($this->authId, true)
         );
         if ($this->ldapConfig['servers']) {
-            $ldap = new \SimpleSAML\Auth\LDAP(
+            $ldap = new \SimpleSAML\Module\ldap\Auth\Ldap(
                 $config->getString('servers'),
                 $config->getBoolean('enable_tls', false),
                 $config->getBoolean('debug', false),
@@ -201,6 +212,9 @@ class CAS extends \SimpleSAML\Auth\Source
                 $config->getBoolean('referrals', true)
             );
             $ldapattributes = $ldap->validate($this->ldapConfig, $username);
+            if ($ldapattributes === false) {
+                throw new \Exception("Failed to authenticate against LDAP-server.");
+            }
         }
         $attributes = array_merge_recursive($casattributes, $ldapattributes);
         $state['Attributes'] = $attributes;
@@ -213,10 +227,11 @@ class CAS extends \SimpleSAML\Auth\Source
      * Log-in using cas
      *
      * @param array &$state  Information about the current authentication.
+     * @return void
      */
     public function authenticate(&$state)
     {
-        assert(is_array($state));
+        Assert::isArray($state);
 
         // We are going to need the authId in order to retrieve this authentication source later
         $state[self::AUTHID] = $this->authId;
@@ -241,10 +256,11 @@ class CAS extends \SimpleSAML\Auth\Source
      * showing the user a page, or redirecting, this function should return.
      *
      * @param array &$state  Information about the current logout operation.
+     * @return void
      */
     public function logout(&$state)
     {
-        assert(is_array($state));
+        Assert::isArray($state);
         $logoutUrl = $this->casConfig['logout'];
 
         \SimpleSAML\Auth\State::deleteState($state);

@@ -2,6 +2,14 @@
 
 namespace SimpleSAML\Module\discopower;
 
+use SimpleSAML\Configuration;
+use SimpleSAML\Locale\Translate;
+use SimpleSAML\Logger;
+use SimpleSAML\Session;
+use SimpleSAML\Utils\HTTP;
+use SimpleSAML\XHTML\Template;
+use Webmozart\Assert\Assert;
+
 /**
  * This class implements a generic IdP discovery service, for use in various IdP discovery service pages. This should
  * reduce code duplication.
@@ -11,7 +19,6 @@ namespace SimpleSAML\Module\discopower;
  * @author Andreas Åkre Solberg <andreas@uninett.no>, UNINETT AS.
  * @package SimpleSAMLphp
  */
-
 class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
 {
     /**
@@ -51,12 +58,12 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
     {
         parent::__construct($metadataSets, $instance);
 
-        $this->discoconfig = \SimpleSAML\Configuration::getConfig('module_discopower.php');
+        $this->discoconfig = Configuration::getConfig('module_discopower.php');
 
         $this->cdcDomain = $this->discoconfig->getString('cdc.domain', null);
         if ($this->cdcDomain !== null && $this->cdcDomain[0] !== '.') {
             // ensure that the CDC domain starts with a dot ('.') as required by the spec
-            $this->cdcDomain = '.'.$this->cdcDomain;
+            $this->cdcDomain = '.' . $this->cdcDomain;
         }
 
         $this->cdcLifetime = $this->discoconfig->getInteger('cdc.lifetime', null);
@@ -69,10 +76,11 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
      * This is an helper function for logging messages. It will prefix the messages with our discovery service type.
      *
      * @param string $message The message which should be logged.
+     * @return void
      */
     protected function log($message)
     {
-        \SimpleSAML\Logger::info('PowerIdPDisco.'.$this->instance.': '.$message);
+        Logger::info('PowerIdPDisco.' . $this->instance . ': '.$message);
     }
 
 
@@ -135,7 +143,7 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
         }
 
         foreach ($slist as $tab => $tbslist) {
-            uasort($slist[$tab], ['\SimpleSAML\Module\discopower\PowerIdPDisco', 'mcmp']);
+            uasort($slist[$tab], [self::class, 'mcmp']);
         }
 
         return $slist;
@@ -216,8 +224,9 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
         }
 
         $defaultrule = true;
-        if (array_key_exists('entities.include', $spmd['discopower.filter']) ||
-            array_key_exists('tags.include', $spmd['discopower.filter'])
+        if (
+            array_key_exists('entities.include', $spmd['discopower.filter'])
+            || array_key_exists('tags.include', $spmd['discopower.filter'])
         ) {
             $defaultrule = false;
         }
@@ -236,6 +245,7 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
      * Handles a request to this discovery service.
      *
      * The IdP disco parameters should be set before calling this function.
+     * @return void
      */
     public function handleRequest()
     {
@@ -246,22 +256,8 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
         $idpList = $this->idplistStructured($this->filterList($idpList));
         $preferredIdP = $this->getRecommendedIdP();
 
-        $t = new \SimpleSAML\XHTML\Template($this->config, 'discopower:disco.tpl.php', 'disco');
-        $discoPowerTabs = [
-            'denmark' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:denmark}'),
-            'edugain' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:edugain}'),
-            'finland' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:finland}'),
-            'greece' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:greece}'),
-            'southafrica' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:southafrica}'),
-            'iceland' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:iceland}'),
-            'incommon' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:incommon}'),
-            'kalmar' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:kalmar}'),
-            'misc' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:misc}'),
-            'norway' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:norway}'),
-            'sweden' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:sweden}'),
-            'switzerland' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:switzerland}'),
-            'ukacessfederation' => \SimpleSAML\Locale\Translate::noop('{discopower:tabs:ukacessfederation}'),
-        ];
+        $t = new Template($this->config, 'discopower:disco.tpl.php', 'disco');
+        $translator = $t->getTranslator();
 
         $t->data['return'] = $this->returnURL;
         $t->data['returnIDParam'] = $this->returnIdParam;
@@ -282,33 +278,39 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
             $t->data['autofocus'] = 'favouritesubmit';
         }
 
-        $search = '<script type="text/javascript">
-            $(document).ready(function() {
-                $("#tabdiv").tabs({ selected: '.$t->data['defaulttab'].' });';
-        $i = 0;
-        foreach ($idpList as $tab => $slist) {
-            $search .= "\n".'$("#query_'.$tab.'").liveUpdate("#list_'.$tab.'")'.
-            (($i++ == 0) && (empty($this->data['faventry'])) ? '.focus()' : '').';';
-        }
-        $search .= "});\n</script>";
+        /* store the tab list in the session */
+        $session = Session::getSessionFromRequest();
+        $session->setData('discopower:tabList', 'faventry', $t->data['faventry']);
+        $session->setData('discopower:tabList', 'tabs', array_keys($idpList));
+        $session->setData('discopower:tabList', 'defaulttab', $t->data['defaulttab']);
 
-        $t->data['search'] = $search;
         $t->data['score'] = $this->discoconfig->getValue('score', 'quicksilver');
-        $t->data['tabNames'] = $discoPowerTabs;
         $t->data['preferredidp'] = $preferredIdP;
-        $t->data['urlpattern'] = htmlspecialchars(\SimpleSAML\Utils\HTTP::getSelfURLNoQuery());
+        $t->data['urlpattern'] = htmlspecialchars(HTTP::getSelfURLNoQuery());
         $t->data['rememberenabled'] = $this->config->getBoolean('idpdisco.enableremember', false);
         $t->data['rememberchecked'] = $this->config->getBoolean('idpdisco.rememberchecked', false);
-        $t->data['jquery'] = ['core' => true, 'ui' => true];
+        foreach (array_keys($idpList) as $tab) {
+            if ($translator->getTag('{discopower:tabs:' . $tab . '}') === null) {
+                $translator->includeInlineTranslation('{discopower:tabs:' . $tab . '}', $tab);
+            }
+            $t->data['tabNames'][$tab] = $translator::noop('{discopower:tabs:' . $tab . '}');
+        }
         $t->show();
     }
 
+
+    /**
+     * @param \SimpleSAML\XHTML\Template $t
+     * @param array $metadata
+     * @param string $favourite
+     * @return array
+     */
     private function processMetadata($t, $metadata, $favourite)
     {
         $basequerystring = '?'.
-            'entityID='.urlencode($t->data['entityID']).'&amp;'.
-            'return='.urlencode($t->data['return']).'&amp;'.
-            'returnIDParam='.urlencode($t->data['returnIDParam']).'&amp;idpentityid=';
+            'entityID=' . urlencode($t->data['entityID']) . '&amp;' .
+            'return=' . urlencode($t->data['return']) . '&amp;' .
+            'returnIDParam=' . urlencode($t->data['returnIDParam']) . '&amp;idpentityid=';
 
         foreach ($metadata as $tab => $idps) {
             foreach ($idps as $entityid => $entity) {
@@ -341,17 +343,17 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
 
                 // HTML output
                 if ($entity['entityid'] === $favourite) {
-                    $html = '<a class="metaentry favourite" href="'.
-                        $basequerystring.urlencode($entity['entityid']).'">';
+                    $html = '<a class="metaentry favourite" href="' .
+                        $basequerystring.urlencode($entity['entityid']) . '">';
                 } else {
-                    $html = '<a class="metaentry" href="'.
-                        $basequerystring.urlencode($entity['entityid']).'">';
+                    $html = '<a class="metaentry" href="' .
+                        $basequerystring.urlencode($entity['entityid']) . '">';
                 }
                 $html .= $entity['translated'];
                 if (array_key_exists('icon', $entity) && $entity['icon'] !== null) {
-                    $iconUrl = \SimpleSAML\Utils\HTTP::resolveURL($entity['icon']);
-                    $html .= '<img alt="Icon for identity provider" class="entryicon" src="'.
-                        htmlspecialchars($iconUrl).'" />';
+                    $iconUrl = HTTP::resolveURL($entity['icon']);
+                    $html .= '<img alt="Icon for identity provider" class="entryicon" src="' .
+                        htmlspecialchars($iconUrl) . '" />';
                 }
                 $html .= '</a>';
                 $entity['html'] = $html;
@@ -394,6 +396,7 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
      * This function overrides the corresponding function in the parent class, to add support for common domain cookie.
      *
      * @param string $idp The entityID of the IdP.
+     * @return void
      */
     protected function setPreviousIdP($idp)
     {
@@ -433,7 +436,7 @@ class PowerIdPDisco extends \SimpleSAML\XHTML\IdPDisco
             'secure'   => true,
             'httponly' => false,
         ];
-        \SimpleSAML\Utils\HTTP::setCookie('_saml_idp', $newCookie, $params, false);
+        HTTP::setCookie('_saml_idp', $newCookie, $params, false);
     }
 
 

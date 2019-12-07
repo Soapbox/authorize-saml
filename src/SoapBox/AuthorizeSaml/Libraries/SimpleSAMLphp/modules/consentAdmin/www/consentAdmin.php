@@ -11,9 +11,19 @@
  * Author: Mads Freek <freek@ruc.dk>, Jacob Christiansen <jach@wayf.dk>
  */
 
-/*
+/**
  * Runs the processing chain and ignores all filter which have user
  * interaction.
+ *
+ * @param array $idp_metadata
+ * @param string $source
+ * @param array $sp_metadata
+ * @param string $sp_entityid
+ * @param array $attributes
+ * @param string $userid
+ * @param bool $hashAttributes
+ * @param array $excludeAttributes
+ * @return array
  */
 function driveProcessingChain(
     $idp_metadata,
@@ -44,7 +54,9 @@ function driveProcessingChain(
     ];
     /* we're being bridged, so add that info to the state */
     if (strpos($source, '-idp-remote|') !== false) {
-        $authProcState['saml:sp:IdP'] = substr($source, strpos($source, '|') + 1);
+        /** @var int $i */
+        $i = strpos($source, '|');
+        $authProcState['saml:sp:IdP'] = substr($source, $i + 1);
     }
 
     /*
@@ -106,7 +118,6 @@ $metadata = \SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
 /*
  * Get IdP id and metadata
  */
-
 
 $idp_entityid = $metadata->getMetaDataCurrentEntityID('saml20-idp-hosted');
 $idp_metadata = $metadata->getMetaData($idp_entityid, 'saml20-idp-hosted');
@@ -176,6 +187,7 @@ if ($action !== null && $sp_entityid !== null) {
         'consentAdmin:consentadminajax.php',
         'consentAdmin:consentadmin'
     );
+    $translator = $template->getTranslator();
 
     // Get SP metadata
     $sp_metadata = $metadata->getMetaData($sp_entityid, 'saml20-sp-remote');
@@ -207,8 +219,9 @@ if ($action !== null && $sp_entityid !== null) {
             $rowcount = $consent_storage->deleteConsent($hashed_user_id, $targeted_id);
             if ($rowcount > 0) {
                 $res = $translator->t("removed");
+            } else {
+                throw new \Exception("Unknown action (should not happen)");
             }
-            // Unknown action (should not happen)
         } else {
             \SimpleSAML\Logger::info('consentAdmin: unknown action');
             $res = $translator->t("unknown");
@@ -236,6 +249,7 @@ $translator = $template->getTranslator();
 $translator->includeLanguageFile('attributes'); // attribute listings translated by this dictionary
 
 $sp_empty_description = $translator->getTag('sp_empty_description');
+$sp_list = [];
 
 // Process consents for all SP
 foreach ($all_sp_metadata as $sp_entityid => $sp_values) {
@@ -274,7 +288,7 @@ foreach ($all_sp_metadata as $sp_entityid => $sp_values) {
             \SimpleSAML\Logger::info('consentAdmin: ok');
             $sp_status = "ok";
         }
-        // Consent does not exists
+        // Consent does not exist
     } else {
         SimpleSAML\Logger::info('consentAdmin: none');
         $sp_status = "none";

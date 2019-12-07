@@ -1,7 +1,5 @@
 <?php
 
-namespace SimpleSAML\Test\Module\saml\Auth\Process;
-
 /**
  * Test for the saml:NameIDAttribute filter.
  *
@@ -9,16 +7,16 @@ namespace SimpleSAML\Test\Module\saml\Auth\Process;
  * @package SimpleSAMLphp
  */
 
-use PHPUnit\Framework\TestCase;
+namespace SimpleSAML\Test\Module\saml\Auth\Process;
 
+use PHPUnit\Framework\TestCase;
 use SimpleSAML\Module\saml\Auth\Process\NameIDAttribute;
 use SAML2\XML\saml\NameID;
 use SAML2\Constants;
 
 class NameIDAttributeTest extends TestCase
 {
-
-    /*
+    /**
      * Helper function to run the filter with a given configuration.
      *
      * @param array $config  The filter configuration.
@@ -35,6 +33,7 @@ class NameIDAttributeTest extends TestCase
 
     /**
      * Test minimal configuration.
+     * @return void
      */
     public function testMinimalConfig()
     {
@@ -62,8 +61,10 @@ class NameIDAttributeTest extends TestCase
         $this->assertEquals("{$spId}!{$idpId}!{$nameId->getValue()}", $result['Attributes']['nameid'][0]);
     }
 
+
     /**
      * Test custom attribute name.
+     * @return void
      */
     public function testCustomAttributeName()
     {
@@ -92,8 +93,10 @@ class NameIDAttributeTest extends TestCase
         $this->assertEquals("{$spId}!{$idpId}!{$nameId->getValue()}", $result['Attributes'][$attributeName][0]);
     }
 
+
     /**
      * Test custom format.
+     * @return void
      */
     public function testFormat()
     {
@@ -123,6 +126,7 @@ class NameIDAttributeTest extends TestCase
 
     /**
      * Test custom attribute name with format.
+     * @return void
      */
     public function testCustomAttributeNameAndFormat()
     {

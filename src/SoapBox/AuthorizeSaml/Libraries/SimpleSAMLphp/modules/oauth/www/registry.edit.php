@@ -19,7 +19,10 @@ if ($session->isValid($authsource)) {
     $userid = $attributes[$useridattr][0];
 } else {
     $as = \SimpleSAML\Auth\Source::getById($authsource);
-    $as->initLogin(\SimpleSAML\Utils\HTTP::getSelfURL());
+    if (!is_null($as)) {
+        $as->initLogin(\SimpleSAML\Utils\HTTP::getSelfURL());
+    }
+    throw new \Exception('Invalid authentication source: '.$authsource);
 }
 
 if (array_key_exists('editkey', $_REQUEST)) {
@@ -55,5 +58,4 @@ $form = $editor->metaToForm($entry);
 
 $template = new \SimpleSAML\XHTML\Template($config, 'oauth:registry.edit.tpl.php');
 $template->data['form'] = $form;
-$template->data['jquery'] = ['core' => false, 'ui' => true, 'css' => true];
 $template->show();

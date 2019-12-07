@@ -21,8 +21,12 @@ class LiveID extends \SimpleSAML\Auth\Source
      */
     const AUTHID = 'authwindowslive:AuthId';
 
+    /** @var string */
     private $key;
+
+    /** @var string */
     private $secret;
+
 
     /**
      * Constructor for this authentication source.
@@ -57,6 +61,7 @@ class LiveID extends \SimpleSAML\Auth\Source
      * Log-in using LiveID platform
      *
      * @param array &$state  Information about the current authentication.
+     * @return void
      */
     public function authenticate(&$state)
     {
@@ -85,8 +90,8 @@ class LiveID extends \SimpleSAML\Auth\Source
     }
 
     /**
-     * @param $state
-     *
+     * @param array &$state
+     * @return void
      * @throws \Exception
      */
     public function finalStep(&$state)
@@ -113,7 +118,8 @@ class LiveID extends \SimpleSAML\Auth\Source
             ],
         ];
 
-        $result = \SimpleSAML\Utils\HTTP::fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', $context);
+        /** @var string $result */
+        $result = \SimpleSAML\Utils\HTTP::fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', $context, false);
 
         $response = json_decode($result, true);
 
@@ -134,6 +140,8 @@ class LiveID extends \SimpleSAML\Auth\Source
             'http' => ['header' => "Accept: application/json\r\nAuthorization: Bearer ".
                 $response['access_token']."\r\n"]
         ];
+
+        /** @var string $data */
         $data = \SimpleSAML\Utils\HTTP::fetch('https://graph.microsoft.com/v1.0/me', $opts);
         $userdata = json_decode($data, true);
 

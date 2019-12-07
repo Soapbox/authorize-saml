@@ -13,13 +13,14 @@ $state = \SimpleSAML\Auth\State::loadState(
 );
 
 // Find authentication source
-if (!array_key_exists(\SimpleSAML\Module\authtwitter\Auth\Source\Twitter::AUTHID, $state)) {
+if (is_null($state) || !array_key_exists(\SimpleSAML\Module\authtwitter\Auth\Source\Twitter::AUTHID, $state)) {
     throw new \SimpleSAML\Error\BadRequest(
         'No data in state for '.\SimpleSAML\Module\authtwitter\Auth\Source\Twitter::AUTHID
     );
 }
 $sourceId = $state[\SimpleSAML\Module\authtwitter\Auth\Source\Twitter::AUTHID];
 
+/** @var \SimpleSAML\Module\authtwitter\Auth\Source\Twitter|null $source */
 $source = \SimpleSAML\Auth\Source::getById($sourceId);
 if ($source === null) {
     throw new \SimpleSAML\Error\BadRequest(
