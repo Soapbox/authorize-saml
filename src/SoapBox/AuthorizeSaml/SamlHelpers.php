@@ -293,7 +293,7 @@ class SamlHelpers
         }
 
         $response = $b->receive();
-        if (!($response instanceof \SAML2_Response)) {
+        if (!($response instanceof \SAML2\Response)) {
             throw new \SimpleSAML_Error_BadRequest('Invalid message received to AssertionConsumerService endpoint.');
         }
 
