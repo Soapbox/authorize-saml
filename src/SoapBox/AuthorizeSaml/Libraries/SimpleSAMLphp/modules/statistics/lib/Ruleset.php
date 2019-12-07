@@ -1,7 +1,7 @@
 <?php
 /*
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_statistics_Ruleset {
 
@@ -51,7 +51,6 @@ class sspmod_statistics_Ruleset {
 		foreach ($this->availrules AS $key) {
 			$available_rules[$key] = array('name' => $statrules[$key]['name'], 'descr' => $statrules[$key]['descr']);
 		}
-		// echo('<pre>'); print_r($available_rules); exit;
 		$this->availrulenames = $available_rules;
 		
 	}

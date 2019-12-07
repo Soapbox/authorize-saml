@@ -4,21 +4,22 @@
  * Disable strict error reporting, since the OpenID library
  * used is PHP4-compatible, and not PHP5 strict-standards compatible.
  */
-SimpleSAML_Utilities::maskErrors(E_NOTICE | E_STRICT);
+sspmod_openidProvider_Utils::maskErrors(E_NOTICE | E_STRICT);
 if (defined('E_DEPRECATED')) {
-	/* PHP 5.3 also has E_DEPRECATED. */
-	SimpleSAML_Utilities::maskErrors(constant('E_DEPRECATED'));
+	// PHP 5.3 also has E_DEPRECATED
+    sspmod_openidProvider_Utils::maskErrors(constant('E_DEPRECATED'));
 }
 
-/* Add the OpenID library search path. */
+// Add the OpenID library search path.
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(dirname(dirname(dirname(__FILE__)))) . '/lib');
-include_once  dirname(dirname(dirname(dirname(__FILE__)))) . '/lib/Auth/OpenID/SReg.php';
-include_once  dirname(dirname(dirname(dirname(__FILE__)))) . '/lib/Auth/OpenID/AX.php';
+include_once('Auth/OpenID/SReg.php');
+include_once('Auth/OpenID/AX.php');
 
 /**
  * Helper class for the OpenID provider code.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
+ * @version $Id$
  */
 class sspmod_openidProvider_Server {
 
@@ -322,7 +323,7 @@ class sspmod_openidProvider_Server {
 
 		$stateId = SimpleSAML_Auth_State::saveState($state, 'openidProvider:resumeState');
 		$stateURL = SimpleSAML_Module::getModuleURL('openidProvider/' . $page);
-		$stateURL = SimpleSAML_Utilities::addURLparameter($stateURL, array('StateID' => $stateId));
+		$stateURL = \SimpleSAML\Utils\HTTP::addURLParameters($stateURL, array('StateID' => $stateId));
 
 		return $stateURL;
 	}
@@ -336,12 +337,6 @@ class sspmod_openidProvider_Server {
 	 */
 	public function loadState($stateId) {
 		assert('is_string($stateId)');
-
-		// sanitize the input
-		$sid = SimpleSAML_Utilities::parseStateID($stateId);
-		if (!is_null($sid['url'])) {
-			SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-		}
 
 		return SimpleSAML_Auth_State::loadState($stateId, 'openidProvider:resumeState');
 	}
@@ -420,7 +415,7 @@ class sspmod_openidProvider_Server {
 			}
 
 			$trustURL = $this->getStateURL('trust.php', $state);
-			SimpleSAML_Utilities::redirectTrustedURL($trustURL);
+			\SimpleSAML\Utils\HTTP::redirectTrustedURL($trustURL);
 		}
 
 		if (!$trusted) {
@@ -452,13 +447,15 @@ class sspmod_openidProvider_Server {
     	$sreg_resp->toMessage($response->fields);
 
     	//Process AX requests
-    	$ax_resp = new Auth_OpenID_AX_FetchResponse();
-    	foreach($ax_req->iterTypes() as $type_uri) {
-            if(isset($attributes[$type_uri])) {
+        if (!Auth_OpenID_AX::isError($ax_req)) {
+            $ax_resp = new Auth_OpenID_AX_FetchResponse();
+            foreach ($ax_req->iterTypes() as $type_uri) {
+                if (isset($attributes[$type_uri])) {
                     $ax_resp->addValue($type_uri, $attributes[$type_uri]);
+                }
             }
-    	}
-    	$ax_resp->toMessage($response->fields);
+            $ax_resp->toMessage($response->fields);
+        }
 
 		/* The user is authenticated, and trusts this site. */
 		$this->sendResponse($response);

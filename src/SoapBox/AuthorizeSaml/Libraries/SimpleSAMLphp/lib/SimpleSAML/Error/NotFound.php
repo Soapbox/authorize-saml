@@ -7,7 +7,7 @@
  * shown a 404 Not Found error page.
  *
  * @author Olav Morken, UNINETT AS.
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class SimpleSAML_Error_NotFound extends SimpleSAML_Error_Error {
 
@@ -27,7 +27,7 @@ class SimpleSAML_Error_NotFound extends SimpleSAML_Error_Error {
 
 		assert('is_null($reason) || is_string($reason)');
 
-		$url = SimpleSAML_Utilities::selfURL();
+		$url = \SimpleSAML\Utils\HTTP::getSelfURL();
 
 		if($reason === NULL) {
 			parent::__construct(array('NOTFOUND', '%URL%' => $url));

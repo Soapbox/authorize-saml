@@ -41,9 +41,7 @@ require_once 'Zend_InfoCard_Xml_Security_Transform.php';
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
  
-/*
-* ÚLTIMA REVISIÓN: 4-DEC-2008
-*/
+// * ÚLTIMA REVISIÓN: 4-DEC-2008
 
 class Zend_InfoCard_Xml_Security
 {
@@ -221,7 +219,7 @@ static public function validateXMLSignature($strXMLInput, $sts_crt=NULL){
 		$signedInfoXML = self::addNamespace($signedInfo, "http://www.w3.org/2000/09/xmldsig#");
 		SimpleSAML_Logger::debug("canonicalizo ".$signedInfoXML);
 		$canonical_signedinfo = $transformer->applyTransforms($signedInfoXML);
-		if (openssl_verify($canonical_signedinfo,$signatureValue,$check_key)) {
+		if (openssl_verify($canonical_signedinfo,$signatureValue,$check_key) === 1) {
 			list($reference) = $sxe->xpath("//ds:Signature/ds:SignedInfo/ds:Reference");
 			openssl_free_key($check_key);
 			return (string)$reference['URI'];

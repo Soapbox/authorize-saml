@@ -3,7 +3,7 @@
 /**
  * CDC server class.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_cdc_Server {
 
@@ -211,7 +211,7 @@ class sspmod_cdc_Server {
 			'httponly' => FALSE,
 		);
 
-		SimpleSAML_Utilities::setCookie('_saml_idp', NULL, $params, FALSE);
+        \SimpleSAML\Utils\HTTP::setCookie('_saml_idp', NULL, $params, FALSE);
 		return 'ok';
 	}
 
@@ -324,11 +324,11 @@ class sspmod_cdc_Server {
 			'Signature' => $signature,
 		);
 
-		$url = SimpleSAML_Utilities::addURLparameter($to, $params);
+		$url = \SimpleSAML\Utils\HTTP::addURLParameters($to, $params);
 		if (strlen($url) < 2048) {
-			SimpleSAML_Utilities::redirectTrustedURL($url);
+			\SimpleSAML\Utils\HTTP::redirectTrustedURL($url);
 		} else {
-			SimpleSAML_Utilities::postRedirect($to, $params);
+			\SimpleSAML\Utils\HTTP::submitPOSTData($to, $params);
 		}
 	}
 
@@ -362,7 +362,7 @@ class sspmod_cdc_Server {
 		foreach ($ret as &$idp) {
 			$idp = base64_decode($idp);
 			if ($idp === FALSE) {
-				/* Not properly base64 encoded. */
+				// Not properly base64 encoded
 				SimpleSAML_Logger::warning('CDC - Invalid base64-encoding of CDC entry.');
 				return array();
 			}
@@ -387,7 +387,7 @@ class sspmod_cdc_Server {
 		$cookie = implode(' ', $list);
 
 		while (strlen($cookie) > 4000) {
-			/* The cookie is too long. Remove the oldest elements until it is short enough. */
+			// The cookie is too long. Remove the oldest elements until it is short enough
 			$tmp = explode(' ', $cookie, 2);
 			if (count($tmp) === 1) {
 				/*
@@ -407,7 +407,7 @@ class sspmod_cdc_Server {
 			'httponly' => FALSE,
 		);
 
-		SimpleSAML_Utilities::setCookie('_saml_idp', $cookie, $params, FALSE);
+        \SimpleSAML\Utils\HTTP::setCookie('_saml_idp', $cookie, $params, FALSE);
 	}
 
 }

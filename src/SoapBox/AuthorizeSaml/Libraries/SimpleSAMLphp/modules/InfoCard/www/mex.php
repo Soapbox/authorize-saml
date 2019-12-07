@@ -27,7 +27,7 @@ $ICconfig['UserCredential'] = $autoconfig->getValue('UserCredential');
 
 
 // Grab the important parts of the token request.  That's pretty much just
-// the request ID.
+// the request ID
 $request_id = '';
 if ($use_soap && strlen($HTTP_RAW_POST_DATA))
 {
@@ -240,18 +240,3 @@ $buf .= '</S:Envelope>';
 
 
 print($buf);
-
-?>
-
-
-
-
-
-
-
-
-
-
-
-
-

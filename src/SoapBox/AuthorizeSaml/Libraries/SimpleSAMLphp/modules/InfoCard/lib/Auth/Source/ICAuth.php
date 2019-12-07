@@ -25,7 +25,7 @@ class sspmod_InfoCard_Auth_Source_ICAuth extends SimpleSAML_Auth_Source {
 		assert('is_array($info)');
 		assert('is_array($config)');
 
-		/* Call the parent constructor first, as required by the interface. */
+		// Call the parent constructor first, as required by the interface
 		parent::__construct($info, $config);
 	}
 	
@@ -33,11 +33,11 @@ class sspmod_InfoCard_Auth_Source_ICAuth extends SimpleSAML_Auth_Source {
 	public function authenticate(&$state) {
 		assert('is_array($state)');
 
-		/* We are going to need the authId in order to retrieve this authentication source later. */
+		// We are going to need the authId in order to retrieve this authentication source later
 		$state[self::AUTHID] = $this->authId;
 		$id = SimpleSAML_Auth_State::saveState($state, self::STAGEID);
 		$url = SimpleSAML_Module::getModuleURL('InfoCard/login-infocard.php');
-		SimpleSAML_Utilities::redirectTrustedURL($url, array('AuthState' => $id));
+		\SimpleSAML\Utils\HTTP::redirectTrustedURL($url, array('AuthState' => $id));
 	}
 	
 
@@ -68,15 +68,9 @@ class sspmod_InfoCard_Auth_Source_ICAuth extends SimpleSAML_Auth_Source {
 				$attributes[$claim] = array($claims->$claim);
 			}
 
-			// sanitize the input
-			$sid = SimpleSAML_Utilities::parseStateID($authStateId);
-			if (!is_null($sid['url'])) {
-				SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-			}
-
-			/* Retrieve the authentication state. */
+			// Retrieve the authentication state
 			$state = SimpleSAML_Auth_State::loadState($authStateId, self::STAGEID);
-			/* Find authentication source. */
+			// Find authentication source
 			assert('array_key_exists(self::AUTHID, $state)');
 			$source = SimpleSAML_Auth_Source::getById($state[self::AUTHID]);
 			if ($source === NULL) {
@@ -94,5 +88,3 @@ class sspmod_InfoCard_Auth_Source_ICAuth extends SimpleSAML_Auth_Source {
 	}
 
 }
-
-?>

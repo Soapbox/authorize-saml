@@ -8,6 +8,10 @@ if (!array_key_exists('TARGET', $_REQUEST)) {
 	throw new SimpleSAML_Error_BadRequest('Missing TARGET parameter.');
 }
 
+if (!array_key_exists('PATH_INFO', $_SERVER)) {
+    throw new SimpleSAML_Error_BadRequest('Missing authentication source ID in assertion consumer service URL');
+}
+
 $sourceId = $_SERVER['PATH_INFO'];
 $end = strpos($sourceId, '/', 1);
 if ($end === FALSE) {
@@ -22,24 +26,16 @@ SimpleSAML_Logger::debug('Received SAML1 response');
 $target = (string)$_REQUEST['TARGET'];
 
 if (preg_match('@^https?://@i', $target)) {
-	/* Unsolicited response. */
+	// Unsolicited response
 	$state = array(
 		'saml:sp:isUnsolicited' => TRUE,
 		'saml:sp:AuthId' => $sourceId,
-		'saml:sp:RelayState' => SimpleSAML_Utilities::checkURLAllowed($target),
+		'saml:sp:RelayState' => \SimpleSAML\Utils\HTTP::checkURLAllowed($target),
 	);
 } else {
-	$stateID = $_REQUEST['TARGET'];
+	$state = SimpleSAML_Auth_State::loadState($_REQUEST['TARGET'], 'saml:sp:sso');
 
-	// sanitize the input
-	$sid = SimpleSAML_Utilities::parseStateID($stateID);
-	if (!is_null($sid['url'])) {
-		SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-	}
-
-	$state = SimpleSAML_Auth_State::loadState($stateID, 'saml:sp:sso');
-
-	/* Check that the authentication source is correct. */
+	// Check that the authentication source is correct.
 	assert('array_key_exists("saml:sp:AuthId", $state)');
 	if ($state['saml:sp:AuthId'] !== $sourceId) {
 		throw new SimpleSAML_Error_Exception('The authentication source id in the URL does not match the authentication source which sent the request.');
@@ -85,7 +81,7 @@ $logoutState = array(
 	);
 $state['LogoutState'] = $logoutState;
 
+$state['saml:sp:NameID'] = $response->getNameID();
+
 $source->handleResponse($state, $responseIssuer, $attributes);
 assert('FALSE');
-
-?>

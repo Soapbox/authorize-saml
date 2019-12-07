@@ -11,14 +11,14 @@
 */
 
 
-/* Load the configuration. */
+// Load the configuration
 $config = SimpleSAML_Configuration::getInstance();
 $autoconfig = $config->copyFromBase('logininfocard', 'config-login-infocard.php');
 
 $Infocard =   $autoconfig->getValue('InfoCard');
 
 
-/* Load the session of the current user. */
+// Load the session of the current user
 $session = SimpleSAML_Session::getSessionFromRequest();
 
 if (!array_key_exists('AuthState', $_REQUEST)) {
@@ -150,4 +150,3 @@ $t->data['password']=$password;
 
 $t->show();
 exit();
-?>

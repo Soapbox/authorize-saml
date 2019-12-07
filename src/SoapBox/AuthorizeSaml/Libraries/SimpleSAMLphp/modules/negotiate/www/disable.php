@@ -5,7 +5,7 @@
  *
  * @author Mathias Meisfjordskar, University of Oslo.
  *         <mathias.meisfjordskar@usit.uio.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 
 $params = array(
@@ -13,7 +13,7 @@ $params = array(
     'secure' => FALSE,
     'httponly' => TRUE,
 );
-SimpleSAML_Utilities::setCookie('NEGOTIATE_AUTOLOGIN_DISABLE_PERMANENT', 'True', $params, FALSE);
+\SimpleSAML\Utils\HTTP::setCookie('NEGOTIATE_AUTOLOGIN_DISABLE_PERMANENT', 'True', $params, FALSE);
 
 $globalConfig = SimpleSAML_Configuration::getInstance();
 $session = SimpleSAML_Session::getSessionFromRequest();

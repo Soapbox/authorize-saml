@@ -6,7 +6,7 @@
  * This is a helper class for signing XML documents.
  *
  * @author Olav Morken, UNINETT AS.
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class SimpleSAML_XML_Signer {
 
@@ -117,7 +117,7 @@ class SimpleSAML_XML_Signer {
 		assert('is_string($file)');
 		assert('is_string($pass) || is_null($pass)');
 
-		$keyFile = SimpleSAML_Utilities::resolveCert($file);
+		$keyFile = \SimpleSAML\Utils\Config::getCertPath($file);
 		if (!file_exists($keyFile)) {
 			throw new Exception('Could not find private key file "' . $keyFile . '".');
 		}
@@ -146,11 +146,11 @@ class SimpleSAML_XML_Signer {
 		assert('is_array($publickey)');
 
 		if (!array_key_exists('PEM', $publickey)) {
-			/* We have a public key with only a fingerprint. */
+			// We have a public key with only a fingerprint
 			throw new Exception('Tried to add a certificate fingerprint in a signature.');
 		}
 
-		/* For now, we only assume that the public key is an X509 certificate. */
+		// For now, we only assume that the public key is an X509 certificate
 		$this->certificate = $publickey['PEM'];
 	}
 
@@ -167,7 +167,7 @@ class SimpleSAML_XML_Signer {
 	public function loadCertificate($file) {
 		assert('is_string($file)');
 
-		$certFile = SimpleSAML_Utilities::resolveCert($file);
+		$certFile = \SimpleSAML\Utils\Config::getCertPath($file);
 		if (!file_exists($certFile)) {
 			throw new Exception('Could not find certificate file "' . $certFile . '".');
 		}
@@ -202,7 +202,7 @@ class SimpleSAML_XML_Signer {
 	public function addCertificate($file) {
 		assert('is_string($file)');
 
-		$certFile = SimpleSAML_Utilities::resolveCert($file);
+		$certFile = \SimpleSAML\Utils\Config::getCertPath($file);
 		if (!file_exists($certFile)) {
 			throw new Exception('Could not find extra certificate file "' . $certFile . '".');
 		}
@@ -254,11 +254,11 @@ class SimpleSAML_XML_Signer {
 
 
 		if($this->certificate !== FALSE) {
-			/* Add the certificate to the signature. */
+			// Add the certificate to the signature
 			$objXMLSecDSig->add509Cert($this->certificate, TRUE);
 		}
 
-		/* Add extra certificates. */
+		// Add extra certificates
 		foreach($this->extraCertificates as $certificate) {
 			$objXMLSecDSig->add509Cert($certificate, TRUE);
 		}
@@ -266,5 +266,3 @@ class SimpleSAML_XML_Signer {
 		$objXMLSecDSig->insertSignature($insertInto, $insertBefore);
 	}
 }
-
-?>

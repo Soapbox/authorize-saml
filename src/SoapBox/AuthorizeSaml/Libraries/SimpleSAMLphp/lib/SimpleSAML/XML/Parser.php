@@ -4,17 +4,14 @@
  * This file will help doing XPath queries in SAML 2 XML documents.
  *
  * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class SimpleSAML_XML_Parser  {
 
 	var $simplexml = null;
 
-	
-	function __construct($xml) {
-		#parent::construct($xml);
+	function __construct($xml) {;
 		$this->simplexml = new SimpleXMLElement($xml);
-		
 		$this->simplexml->registerXPathNamespace('saml2',     'urn:oasis:names:tc:SAML:2.0:assertion');
 		$this->simplexml->registerXPathNamespace('saml2meta', 'urn:oasis:names:tc:SAML:2.0:metadata');
 		$this->simplexml->registerXPathNamespace('ds',        'http://www.w3.org/2000/09/xmldsig#');
@@ -23,7 +20,7 @@ class SimpleSAML_XML_Parser  {
 	
 	public static function fromSimpleXMLElement(SimpleXMLElement $element) {
 		
-		// Traverse all existing namespaces in element.
+		// Traverse all existing namespaces in element
 		$namespaces = $element->getNamespaces();
 		foreach ($namespaces AS $prefix => $ns) {
 			$element[(($prefix === '') ? 'xmlns' : 'xmlns:' . $prefix)] = $ns;
@@ -65,5 +62,3 @@ class SimpleSAML_XML_Parser  {
 	}
 	
 }
-
-?>

@@ -21,7 +21,7 @@ function logFilter($objFile, $tag, $cut){
 $config = SimpleSAML_Configuration::getInstance();
 $session = SimpleSAML_Session::getSessionFromRequest();
 
-SimpleSAML_Utilities::requireAdmin();
+SimpleSAML\Utils\Auth::requireAdmin();
 
 $logpeekconfig = SimpleSAML_Configuration::getConfig('module_logpeek.php');
 $logfile = $logpeekconfig->getValue('logfile', '/var/simplesamlphp.log');
@@ -51,4 +51,3 @@ $t->data['endtime'] = date(DATE_RFC822, $lastTimeEpoch);
 $t->data['filesize'] = $fileSize;
 
 $t->show();
-?>

@@ -100,7 +100,7 @@ and Shibboleth 1.3 protocol:
 
 `userid.attribute`
 :   The attribute name of an attribute which uniquely identifies
-    the user. This attribute is used if simpleSAMLphp needs to generate
+    the user. This attribute is used if SimpleSAMLphp needs to generate
     a persistent unique identifier for the user. This option can be set
     in both the IdP-hosted and the SP-remote metadata. The value in the
     sp-remote metadata has the highest priority. The default value is
@@ -249,6 +249,18 @@ The following SAML 2.0 options are available:
     * `http://www.w3.org/2001/04/xmldsig-more#rsa-sha384`
     * `http://www.w3.org/2001/04/xmldsig-more#rsa-sha512`
 
+`signature.privatekey`
+:   Name of private key file for this IdP, in PEM format. The filename is relative to the cert/-directory.
+:   Note that this option also exists in the IdP-hosted metadata. This entry in the SP-remote metadata overrides the option `privatekey` in the IdP-hosted metadata.
+
+`signature.privatekey_pass`
+:   Passphrase for the private key. Leave this option out if the private key is unencrypted.
+:   Note that this option only is used if `signature.privatekey` is present.
+
+`signature.certificate`
+:   Certificate file included by IdP for KeyInfo within the signature for the SP, in PEM format. The filename is relative to the cert/-directory.
+:   If `signature.privatekey` is present and `signature.certificate` is left blank, X509Certificate will not be included with the signature.
+
 `simplesaml.nameidattribute`
 :   When the value of the `NameIDFormat`-option is set to either
     `email` or `persistent`, this is the name of the attribute which
@@ -304,7 +316,7 @@ The following SAML 2.0 options are available:
 It is possible to encrypt the assertions sent to a SP. Currently the
 only algorithm supported is `AES128_CBC` or `RIJNDAEL_128`.
 
-There are two modes of encryption supported by simpleSAMLphp. One is
+There are two modes of encryption supported by SimpleSAMLphp. One is
 symmetric encryption, in which case both the SP and the IdP needs to
 share a key. The other mode is the use of public key encryption. In
 that mode, the public key of the SP is extracted from the certificate
@@ -326,7 +338,7 @@ of the SP.
 
 ### Fields for signing and validating messages
 
-simpleSAMLphp only signs authentication responses by default.
+SimpleSAMLphp only signs authentication responses by default.
 Signing of logout requests and logout responses can be enabled by
 setting the `redirect.sign` option. Validation of received messages
 can be enabled by the `redirect.validate` option.

@@ -6,7 +6,7 @@ use SoapBox\AuthorizeSaml\SamlStrategy;
  * Common code for building SAML 2 messages based on the
  * available metadata.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_saml_Message
 {
@@ -20,8 +20,15 @@ class sspmod_saml_Message
      */
     public static function addSign(SimpleSAML_Configuration $srcMetadata, SimpleSAML_Configuration $dstMetadata, SAML2_SignedElement $element)
     {
-        $keyArray = SimpleSAML_Utilities::loadPrivateKey($srcMetadata, true);
-        $certArray = SimpleSAML_Utilities::loadPublicKey($srcMetadata, false);
+        $dstPrivateKey = $dstMetadata->getString('signature.privatekey', null);
+
+        if ($dstPrivateKey !== null) {
+            $keyArray = SimpleSAML\Utils\Crypto::loadPrivateKey($dstMetadata, true, 'signature.');
+            $certArray = SimpleSAML\Utils\Crypto::loadPublicKey($dstMetadata, false, 'signature.');
+        } else {
+            $keyArray = SimpleSAML\Utils\Crypto::loadPrivateKey($srcMetadata, true);
+            $certArray = SimpleSAML\Utils\Crypto::loadPublicKey($srcMetadata, false);
+        }
 
         $algo = $dstMetadata->getString('signature.algorithm', null);
         if ($algo === null) {
@@ -47,12 +54,12 @@ class sspmod_saml_Message
         $element->setSignatureKey($privateKey);
 
         if ($certArray === null) {
-            /* We don't have a certificate to add. */
+            // We don't have a certificate to add
             return;
         }
 
         if (!array_key_exists('PEM', $certArray)) {
-            /* We have a public key with only a fingerprint. */
+            // We have a public key with only a fingerprint.
             return;
         }
 
@@ -277,7 +284,7 @@ class sspmod_saml_Message
         $keys = array();
 
         /* Load the new private key if it exists. */
-        $keyArray = SimpleSAML_Utilities::loadPrivateKey($dstMetadata, false, 'new_');
+        $keyArray = SimpleSAML\Utils\Crypto::loadPrivateKey($dstMetadata, false, 'new_');
         if ($keyArray !== null) {
             assert('isset($keyArray["PEM"])');
 
@@ -290,7 +297,7 @@ class sspmod_saml_Message
         }
 
         /* Find the existing private key. */
-        $keyArray = SimpleSAML_Utilities::loadPrivateKey($dstMetadata, true);
+        $keyArray = SimpleSAML\Utils\Crypto::loadPrivateKey($dstMetadata, true);
         assert('isset($keyArray["PEM"])');
 
         $key = new XMLSecurityKey(XMLSecurityKey::RSA_1_5, array('type'=>'private'));
@@ -590,8 +597,9 @@ class sspmod_saml_Message
 
         $found = false;
         $lastError = 'No SubjectConfirmation element in Subject.';
+        $validSCMethods = array(SAML2_Const::CM_BEARER, SAML2_Const::CM_HOK, SAML2_Const::CM_VOUCHES);
         foreach ($assertion->getSubjectConfirmation() as $sc) {
-            if ($sc->Method !== SAML2_Const::CM_BEARER && $sc->Method !== SAML2_Const::CM_HOK) {
+            if (!in_array($sc->Method, $validSCMethods)) {
                 $lastError = 'Invalid Method on SubjectConfirmation: ' . var_export($sc->Method, true);
                 continue;
             }
@@ -613,7 +621,7 @@ class sspmod_saml_Message
             $scd = $sc->SubjectConfirmationData;
             if ($sc->Method === SAML2_Const::CM_HOK) {
                 /* Check HoK Assertion */
-                if (SimpleSAML_Utilities::isHTTPS() === false) {
+                if (\SimpleSAML\Utils\HTTP::isHTTPS() === false) {
                     $lastError = 'No HTTPS connection, but required for Holder-of-Key SSO';
                     continue;
                 }
@@ -624,8 +632,9 @@ class sspmod_saml_Message
                 /* Extract certificate data (if this is a certificate). */
                 $clientCert = $_SERVER['SSL_CLIENT_CERT'];
                 $pattern = '/^-----BEGIN CERTIFICATE-----([^-]*)^-----END CERTIFICATE-----/m';
-                if (preg_match($pattern, $clientCert, $matches) === false) {
-                    $lastError = 'No valid client certificate provided during TLS Handshake with SP';
+                if (!preg_match($pattern, $clientCert, $matches)) {
+                    $lastError = 'Error while looking for client certificate during TLS handshake with SP, the client certificate does not '
+                                . 'have the expected structure';
                     continue;
                 }
                 /* We have a valid client certificate from the browser. */
@@ -666,6 +675,12 @@ class sspmod_saml_Message
                     $lastError = 'Provided client certificate does not match the certificate bound to the Holder-of-Key assertion';
                     continue;
                 }
+            }
+
+            // if no SubjectConfirmationData then don't do anything.
+            if ($scd === null) {
+                $lastError = 'No SubjectConfirmationData provided';
+                continue;
             }
 
             if ($scd->NotBefore && $scd->NotBefore > time() + 60) {

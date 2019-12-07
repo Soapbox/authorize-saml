@@ -4,8 +4,8 @@
  * from a Shibboleth 1.3 SP, parses, and process it, and then authenticates the user and sends the user back
  * to the SP with an Authentication Response.
  *
- * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @author Andreas Ã…kre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
+ * @package SimpleSAMLphp
  */
 
 require_once('../../_include.php');

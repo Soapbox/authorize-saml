@@ -1,19 +1,10 @@
 <?php
 
-/* Find the authentication state. */
+// Find the authentication state
 if (!array_key_exists('AuthState', $_REQUEST) || empty($_REQUEST['AuthState'])) {
 	throw new SimpleSAML_Error_BadRequest('Missing mandatory parameter: AuthState');
 }
-
-$authState = $_REQUEST['AuthState'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($authState);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
-$state = SimpleSAML_Auth_State::loadState($authState, 'openid:auth');
+$state = SimpleSAML_Auth_State::loadState($_REQUEST['AuthState'], 'openid:auth');
 $sourceId = $state['openid:AuthId'];
 $authSource = SimpleSAML_Auth_Source::getById($sourceId);
 if ($authSource === NULL) {
@@ -22,7 +13,7 @@ if ($authSource === NULL) {
 
 try {
 	$authSource->postAuth($state);
-	/* postAuth() should never return. */
+	// postAuth() should never return.
 	assert('FALSE');
 } catch (SimpleSAML_Error_Exception $e) {
 	SimpleSAML_Auth_State::throwException($state, $e);

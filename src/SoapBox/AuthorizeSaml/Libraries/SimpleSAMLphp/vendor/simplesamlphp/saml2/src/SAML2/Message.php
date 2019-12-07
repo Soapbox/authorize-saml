@@ -90,6 +90,11 @@ abstract class SAML2_Message implements SAML2_SignedElement
     private $signatureKey;
 
     /**
+     * @var bool
+     */
+    protected $messageContainedSignatureUponConstruction = FALSE;
+
+    /**
      * List of certificates that should be included in the message.
      *
      * @var array
@@ -102,6 +107,11 @@ abstract class SAML2_Message implements SAML2_SignedElement
      * @var array
      */
     private $validators;
+
+    /**
+     * @var null|string
+     */
+    private $signatureMethod;
 
     /**
      * Initialize a message.
@@ -123,7 +133,7 @@ abstract class SAML2_Message implements SAML2_SignedElement
         $this->tagName = $tagName;
 
         $this->id = SAML2_Utils::getContainer()->generateId();
-        $this->issueInstant = time();
+        $this->issueInstant = SAML2_Utilities_Temporal::getTime();
         $this->certificates = array();
         $this->validators = array();
 
@@ -158,14 +168,19 @@ abstract class SAML2_Message implements SAML2_SignedElement
 
         /* Validate the signature element of the message. */
         try {
+            /** @var null|\DOMAttr $signatureMethod */
+            $signatureMethod = SAML2_Utils::xpQuery($xml, './ds:Signature/ds:SignedInfo/ds:SignatureMethod/@Algorithm');
+
             $sig = SAML2_Utils::validateElement($xml);
 
             if ($sig !== FALSE) {
+                $this->messageContainedSignatureUponConstruction = TRUE;
                 $this->certificates = $sig['Certificates'];
                 $this->validators[] = array(
                     'Function' => array('SAML2_Utils', 'validateSignature'),
                     'Data' => $sig,
                     );
+                $this->signatureMethod = $signatureMethod[0]->value;
             }
 
         } catch (Exception $e) {
@@ -348,6 +363,16 @@ abstract class SAML2_Message implements SAML2_SignedElement
     }
 
     /**
+     * Query whether or not the message contained a signature at the root level when the object was constructed.
+     *
+     * @return bool
+     */
+    public function isMessageConstructedWithSignature()
+    {
+        return $this->messageContainedSignatureUponConstruction;
+    }
+
+    /**
      * Retrieve the RelayState associated with this message.
      *
      * @return string|NULL The RelayState, or NULL if no RelayState is given.
@@ -378,7 +403,7 @@ abstract class SAML2_Message implements SAML2_SignedElement
      */
     public function toUnsignedXML()
     {
-        $this->document = new DOMDocument();
+        $this->document = SAML2_DOMDocumentFactory::create();
 
         $root = $this->document->createElementNS(SAML2_Const::NS_SAMLP, 'samlp:' . $this->tagName);
         $this->document->appendChild($root);
@@ -552,4 +577,11 @@ abstract class SAML2_Message implements SAML2_SignedElement
         $this->extensions = $extensions;
     }
 
+    /**
+     * @return null|string
+     */
+    public function getSignatureMethod()
+    {
+        return $this->signatureMethod;
+    }
 }

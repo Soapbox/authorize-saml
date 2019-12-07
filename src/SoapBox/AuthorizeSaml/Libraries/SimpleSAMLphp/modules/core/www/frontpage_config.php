@@ -2,21 +2,21 @@
 
 
 
-/* Load simpleSAMLphp, configuration */
+// Load SimpleSAMLphp, configuration
 $config = SimpleSAML_Configuration::getInstance();
 $session = SimpleSAML_Session::getSessionFromRequest();
 
-/* Check if valid local session exists.. */
+// Check if valid local session exists.
 if ($config->getBoolean('admin.protectindexpage', false)) {
-	SimpleSAML_Utilities::requireAdmin();
+    SimpleSAML\Utils\Auth::requireAdmin();
 }
-$loginurl = SimpleSAML_Utilities::getAdminLoginURL();
-$isadmin = SimpleSAML_Utilities::isAdmin();
+$loginurl = SimpleSAML\Utils\Auth::getAdminLoginURL();
+$isadmin = SimpleSAML\Utils\Auth::isAdmin();
 
 
 $warnings = array();
 
-if (!SimpleSAML_Utilities::isHTTPS()) {
+if (!\SimpleSAML\Utils\HTTP::isHTTPS()) {
 	$warnings[] = '{core:frontpage:warnings_https}';
 }
 
@@ -44,12 +44,12 @@ $links_federation = array();
 
 
 $links_config[] = array(
-	'href' => SimpleSAML_Utilities::getBaseURL() . 'example-simple/hostnames.php?dummy=1',
+	'href' => \SimpleSAML\Utils\HTTP::getBaseURL() . 'admin/hostnames.php',
 	'text' => '{core:frontpage:link_diagnostics}'
 );
 
 $links_config[] = array(
-	'href' => SimpleSAML_Utilities::getBaseURL() . 'admin/phpinfo.php',
+	'href' => \SimpleSAML\Utils\HTTP::getBaseURL() . 'admin/phpinfo.php',
 	'text' => '{core:frontpage:link_phpinfo}'
 );
 
@@ -79,14 +79,20 @@ $enablematrix = array(
 
 
 $functionchecks = array(
+	'time'             => array('required', 'Date/Time Extension'),
 	'hash'             => array('required',  'Hashing function'),
 	'gzinflate'        => array('required',  'ZLib'),
 	'openssl_sign'     => array('required',  'OpenSSL'),
-	'simplexml_import_dom' => array('required', 'SimpleXML'),
 	'dom_import_simplexml' => array('required', 'XML DOM'),
 	'preg_match'       => array('required',  'RegEx support'),
-	'mcrypt_module_open'=> array('required',  'MCrypt'),
-	'mysql_connect'    => array('optional',  'MySQL support'),
+	'json_decode'      => array('required', 'JSON support'),
+	'class_implements' => array('required', 'Standard PHP Library (SPL)'),
+	'mb_strlen'        => array('required', 'Multibyte String Extension'),
+	'curl_init'        => array('optional', 'cURL (required if automatic version checks are used, also by some modules.'),
+	'mcrypt_module_open'=> array('optional',  'MCrypt (required if digital signatures or encryption are used)'),
+	'session_start'  => array('optional', 'Session Extension (required if PHP sessions are used)'),
+	'pdo_drivers'    => array('optional',  'PDO Extension (required if a database backend is used)'),
+	'memcache_debug' => array('optional', 'Memcache Extension (required if a Memcached backend is used)'),
 );
 if (SimpleSAML_Module::isModuleEnabled('ldap')) {
 	$functionchecks['ldap_bind'] = array('required_ldap',  'LDAP Extension');

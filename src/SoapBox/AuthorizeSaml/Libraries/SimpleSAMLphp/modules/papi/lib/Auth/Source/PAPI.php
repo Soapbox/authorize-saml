@@ -4,7 +4,7 @@
  * Authenticate using PAPI protocol.
  *
  * @author Jaime Perez, RedIRIS
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 include("poa2/PoA.php");
 
@@ -55,7 +55,7 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source {
         assert('is_array($info)');
         assert('is_array($config)');
 
-        /* Call the parent constructor first, as required by the interface. */
+        // Call the parent constructor first, as required by the interface
         parent::__construct($info, $config);
 
         if (!array_key_exists('site', $config)) {
@@ -114,18 +114,12 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source {
         if (isset($_REQUEST['SSPStateID'])) {
 			// yes! restore original request
            	$this->_stateId = (string)$_REQUEST['SSPStateID'];
-           	
-			// sanitize the input
-			$sid = SimpleSAML_Utilities::parseStateID($this->_stateId);
-			if (!is_null($sid['url'])) {
-				SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-			}
 
            	$state = SimpleSAML_Auth_State::loadState($this->_stateId, self::STAGE_INIT);
 		} else if (!$this->_poa->isAuthenticated()) { 
 			// no! we have to save the request
 
-        	/* We are will need the authId in order to retrieve this authentication source later. */
+        	// We are will need the authId in order to retrieve this authentication source later.
         	$state[self::AUTHID] = $this->authId;
         	$this->_stateId = SimpleSAML_Auth_State::saveState($state, self::STAGE_INIT);
 
@@ -167,13 +161,6 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source {
     		$this->_poa->logout(true);
     	} else if (isset($_REQUEST['SSPStateID'])) {
     		$this->_stateId = (string)$_REQUEST['SSPStateID'];
-
-			// sanitize the input
-			$sid = SimpleSAML_Utilities::parseStateID($this->_stateId);
-			if (!is_null($sid['url'])) {
-				SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-			}
-
     		$state = SimpleSAML_Auth_State::loadState($this->_stateId, self::STAGE_INIT);
     	} else {
     		return;
@@ -183,5 +170,3 @@ class sspmod_papi_Auth_Source_PAPI extends SimpleSAML_Auth_Source {
 	}
 
 }
-
-?>

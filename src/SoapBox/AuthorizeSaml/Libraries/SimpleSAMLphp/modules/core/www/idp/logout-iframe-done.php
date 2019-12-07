@@ -3,15 +3,7 @@
 if (!isset($_REQUEST['id'])) {
 	throw new SimpleSAML_Error_BadRequest('Missing required parameter: id');
 }
-$id = (string)$_REQUEST['id'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($id);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
-$state = SimpleSAML_Auth_State::loadState($id, 'core:Logout-IFrame');
+$state = SimpleSAML_Auth_State::loadState($_REQUEST['id'], 'core:Logout-IFrame');
 $idp = SimpleSAML_IdP::getByState($state);
 
 $associations = $idp->getAssociations();
@@ -21,10 +13,10 @@ if (!isset($_REQUEST['cancel'])) {
 	SimpleSAML_Stats::log('core:idp:logout-iframe:page', array('type' => 'done'));
 	$SPs = $state['core:Logout-IFrame:Associations'];
 } else {
-	/* User skipped global logout. */
+	// User skipped global logout
 	SimpleSAML_Logger::stats('slo-iframe skip');
 	SimpleSAML_Stats::log('core:idp:logout-iframe:page', array('type' => 'skip'));
-	$SPs = array(); /* No SPs should have been logged out. */
+	$SPs = array(); // No SPs should have been logged out
 	$state['core:Failed'] = TRUE; /* Mark as partial logout. */
 }
 

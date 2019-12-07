@@ -5,7 +5,7 @@
  *
  * This class is based on www/auth/login-radius.php.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_radius_Auth_Source_Radius extends sspmod_core_Auth_UserPassBase {
 
@@ -68,10 +68,10 @@ class sspmod_radius_Auth_Source_Radius extends sspmod_core_Auth_UserPassBase {
 		assert('is_array($info)');
 		assert('is_array($config)');
 
-		/* Call the parent constructor first, as required by the interface. */
+		// Call the parent constructor first, as required by the interface
 		parent::__construct($info, $config);
 
-		/* Parse configuration. */
+		// Parse configuration.
 		$config = SimpleSAML_Configuration::loadFromArray($config,
 			'Authentication source ' . var_export($this->authId, TRUE));
 
@@ -161,7 +161,7 @@ class sspmod_radius_Auth_Source_Radius extends sspmod_core_Auth_UserPassBase {
 
 		if ($this->vendor === NULL) {
 			/*
-			 * We aren't interrested in any vendor-specific attributes. We are
+			 * We aren't interested in any vendor-specific attributes. We are
 			 * therefore done now.
 			 */
 			return $attributes;
@@ -192,11 +192,6 @@ class sspmod_radius_Auth_Source_Radius extends sspmod_core_Auth_UserPassBase {
 			$vendor = $resv['vendor'];
 			$attrv = $resv['attr'];
 			$datav = $resv['data'];
-
-			/*
-			 * Uncomment this to debug vendor attributes.
-			 */
-			//printf("Got Vendor Attr:%d %d Bytes %s<br/>", $attrv, strlen($datav), bin2hex($datav));
 
 			if ($vendor != $this->vendor || $attrv != $this->vendorType) {
 				continue;

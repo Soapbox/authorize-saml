@@ -3,9 +3,22 @@
 /**
  * Class which implements a basic metadata aggregator.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_aggregator2_Aggregator {
+
+	/**
+	 * The list of signature algorithms supported by the aggregator.
+	 *
+	 * @var array
+	 */
+	public static $SUPPORTED_SIGNATURE_ALGORITHMS = array(
+		XMLSecurityKey::RSA_SHA1,
+		XMLSecurityKey::RSA_SHA256,
+		XMLSecurityKey::RSA_SHA384,
+		XMLSecurityKey::RSA_SHA512,
+	);
+
 
 	/**
 	 * The ID of this aggregator.
@@ -67,6 +80,41 @@ class sspmod_aggregator2_Aggregator {
 	protected $cacheGenerated;
 
 
+    /**
+     * An array of entity IDs to exclude from the aggregate.
+     *
+     * @var string[]|null
+     */
+    protected $excluded;
+
+
+    /**
+     * An indexed array of protocols to filter the aggregate by. keys can be any of:
+     *
+     * - urn:oasis:names:tc:SAML:1.1:protocol
+     * - urn:oasis:names:tc:SAML:2.0:protocol
+     *
+     * Values will be true if enabled, false otherwise.
+     *
+     * @var string[]|null
+     */
+    protected $protocols;
+
+
+    /**
+     * An array of roles to filter the aggregate by. Keys can be any of:
+     *
+     * - SAML2_XML_md_IDPSSODescriptor
+     * - SAML2_XML_md_SPSSODescriptor
+     * - SAML2_XML_md_AttributeAuthorityDescriptor
+     *
+     * Values will be true if enabled, false otherwise.
+     *
+     * @var string[]|null
+     */
+    protected $roles;
+
+
 	/**
 	 * The key we should use to sign the metadata.
 	 *
@@ -89,6 +137,14 @@ class sspmod_aggregator2_Aggregator {
 	 * @var string|NULL
 	 */
 	protected $signCert;
+
+
+	/**
+	 * The algorithm to use for metadata signing.
+	 *
+	 * @var string|NULL
+	 */
+	protected $signAlg;
 
 
 	/**
@@ -151,6 +207,12 @@ class sspmod_aggregator2_Aggregator {
 			$this->cacheTag = sha1(serialize($config));
 		}
 
+        // configure entity IDs excluded by default
+        $this->excludeEntities($config->getArrayize('exclude', null));
+
+        // configure filters
+        $this->setFilters($config->getArrayize('filter', null));
+
 		$this->validLength = $config->getInteger('valid.length', 7*24*60*60);
 
 		$globalConfig = SimpleSAML_Configuration::getInstance();
@@ -176,6 +238,10 @@ class sspmod_aggregator2_Aggregator {
 			}
 		}
 
+		$this->signAlg = $config->getString('sign.algorithm', XMLSecurityKey::RSA_SHA1);
+		if (!in_array($this->signAlg, self::$SUPPORTED_SIGNATURE_ALGORITHMS)) {
+			throw new SimpleSAML_Error_Exception('Unsupported signature algorithm '. var_export($this->signAlg, TRUE));
+		}
 
 		$this->sslCAFile = $config->getString('ssl.cafile', NULL);
 
@@ -255,7 +321,6 @@ class sspmod_aggregator2_Aggregator {
 			SimpleSAML_Utilities::writeFile($expireFile, $expireInfo);
 		} catch (Exception $e) {
 			SimpleSAML_Logger::warning($this->logLoc . 'Unable to write expiration info to ' . var_export($expireFile, TRUE));
-			return $metadata;
 		}
 
 	}
@@ -365,7 +430,7 @@ class sspmod_aggregator2_Aggregator {
 			return;
 		}
 
-		$privateKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA1, array('type' => 'private'));
+		$privateKey = new XMLSecurityKey($this->signAlg, array('type' => 'private'));
 		if ($this->signKeyPass !== NULL) {
 			$privateKey->passphrase = $this->signKeyPass;
 		}
@@ -377,6 +442,34 @@ class sspmod_aggregator2_Aggregator {
 		if ($this->signCert !== NULL) {
 			$element->setCertificates(array($this->signCert));
 		}
+	}
+
+
+	/**
+	 * Recursively browse the children of an EntitiesDescriptor element looking for EntityDescriptor elements, and
+	 * return an array containing all of them.
+	 *
+	 * @param SAML2_XML_md_EntitiesDescriptor $entity The source EntitiesDescriptor that holds the entities to extract.
+	 *
+	 * @return array An array containing all the EntityDescriptors found.
+	 */
+	private static function extractEntityDescriptors($entity) {
+		assert('$entity instanceof SAML2_XML_md_EntitiesDescriptor');
+
+		if (!($entity instanceof SAML2_XML_md_EntitiesDescriptor)) {
+			return array();
+		}
+
+		$results = array();
+		foreach ($entity->children as $child) {
+			if ($child instanceof SAML2_XML_md_EntityDescriptor) {
+				$results[] = $child;
+				continue;
+			}
+
+			$results = array_merge($results, self::extractEntityDescriptors($child));
+		}
+		return $results;
 	}
 
 
@@ -416,14 +509,172 @@ class sspmod_aggregator2_Aggregator {
 			if ($m === NULL) {
 				continue;
 			}
-			$ret->children[] = $m;
+			if ($m instanceof SAML2_XML_md_EntityDescriptor) {
+				$ret->children[] = $m;
+			} elseif ($m instanceof SAML2_XML_md_EntitiesDescriptor) {
+				$ret->children = array_merge($ret->children, self::extractEntityDescriptors($m));
+			}
 		}
 
+		$ret->children = array_unique($ret->children, SORT_REGULAR);
 		$ret->validUntil = $now + $this->validLength;
 
 		return $ret;
 	}
 
+
+    /**
+     * Recursively traverse the children of an EntitiesDescriptor, removing those entities listed in the $entities
+     * property. Returns the EntitiesDescriptor with the entities filtered out.
+     *
+     * @param SAML2_XML_md_EntitiesDescriptor $descriptor The EntitiesDescriptor from where to exclude entities.
+     *
+     * @return SAML2_XML_md_EntitiesDescriptor The EntitiesDescriptor with excluded entities filtered out.
+     */
+    protected function exclude(SAML2_XML_md_EntitiesDescriptor $descriptor)
+    {
+        if (empty($this->excluded)) {
+            return $descriptor;
+        }
+
+        $filtered = array();
+        foreach ($descriptor->children as $child) {
+            if ($child instanceof SAML2_XML_md_EntityDescriptor) {
+                if (in_array($child->entityID, $this->excluded)) {
+                    continue;
+                }
+                $filtered[] = $child;
+            }
+
+            if ($child instanceof SAML2_XML_md_EntitiesDescriptor) {
+                $filtered[] = $this->exclude($child);
+            }
+        }
+
+        $descriptor->children = $filtered;
+        return $descriptor;
+    }
+
+
+    /**
+     * Recursively traverse the children of an EntitiesDescriptor, keeping only those entities with the roles listed in
+     * the $roles property, and support for the protocols listed in the $protocols property. Returns the
+     * EntitiesDescriptor containing only those entities.
+     *
+     * @param SAML2_XML_md_EntitiesDescriptor $descriptor The EntitiesDescriptor to filter.
+     *
+     * @return SAML2_XML_md_EntitiesDescriptor The EntitiesDescriptor with only the entities filtered.
+     */
+    protected function filter(SAML2_XML_md_EntitiesDescriptor $descriptor)
+    {
+        if ($this->roles === null || $this->protocols === null) {
+            return $descriptor;
+        }
+
+        $enabled_roles = array_keys($this->roles, true);
+        $enabled_protos = array_keys($this->protocols, true);
+
+        $filtered = array();
+        foreach ($descriptor->children as $child) {
+            if ($child instanceof SAML2_XML_md_EntityDescriptor) {
+                foreach ($child->RoleDescriptor as $role) {
+                    if (in_array(get_class($role), $enabled_roles)) {
+                        // we found a role descriptor that is enabled by our filters, check protocols
+                        if (array_intersect($enabled_protos, $role->protocolSupportEnumeration) !== array()) {
+                            // it supports some protocol we have enabled, add it
+                            $filtered[] = $child;
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+            if ($child instanceof SAML2_XML_md_EntitiesDescriptor) {
+                $filtered[] = $this->filter($child);
+            }
+        }
+
+        $descriptor->children = $filtered;
+        return $descriptor;
+    }
+
+
+    /**
+     * Set this aggregator to exclude a set of entities from the resulting aggregate.
+     *
+     * @param array|null $entities The entity IDs of the entities to exclude.
+     */
+    public function excludeEntities($entities)
+    {
+        assert('is_array($entities) || is_null($entities)');
+
+        if ($entities === null) {
+            return;
+        }
+        $this->excluded = $entities;
+        sort($this->excluded);
+        $this->cacheId = sha1($this->cacheId . serialize($this->excluded));
+    }
+
+
+    /**
+     * Set the internal filters according to one or more options:
+     *
+     * - 'saml2': all SAML2.0-capable entities.
+     * - 'shib13': all SHIB1.3-capable entities.
+     * - 'saml20-idp': all SAML2.0-capable identity providers.
+     * - 'saml20-sp': all SAML2.0-capable service providers.
+     * - 'saml20-aa': all SAML2.0-capable attribute authorities.
+     * - 'shib13-idp': all SHIB1.3-capable identity providers.
+     * - 'shib13-sp': all SHIB1.3-capable service providers.
+     * - 'shib13-aa': all SHIB1.3-capable attribute authorities.
+     *
+     * @param array|null $set An array of the different roles and protocols to filter by.
+     */
+    public function setFilters($set)
+    {
+        assert('is_array($set) || is_null($set)');
+
+        if ($set === null) {
+            return;
+        }
+
+        // configure filters
+        $this->protocols = array(
+            SAML2_Const::NS_SAMLP                  => TRUE,
+            'urn:oasis:names:tc:SAML:1.1:protocol' => TRUE,
+        );
+        $this->roles = array(
+            'SAML2_XML_md_IDPSSODescriptor'             => TRUE,
+            'SAML2_XML_md_SPSSODescriptor'              => TRUE,
+            'SAML2_XML_md_AttributeAuthorityDescriptor' => TRUE,
+        );
+
+        // now translate from the options we have, to specific protocols and roles
+
+        // check SAML 2.0 protocol
+        $options = array('saml2', 'saml20-idp', 'saml20-sp', 'saml20-aa');
+        $this->protocols[SAML2_Const::NS_SAMLP] = (array_intersect($set, $options) !== array());
+
+        // check SHIB 1.3 protocol
+        $options = array('shib13', 'shib13-idp', 'shib13-sp', 'shib13-aa');
+        $this->protocols['urn:oasis:names:tc:SAML:1.1:protocol'] = (array_intersect($set, $options) !== array());
+
+        // check IdP
+        $options = array('saml2', 'shib13', 'saml20-idp', 'shib13-idp');
+        $this->roles['SAML2_XML_md_IDPSSODescriptor'] = (array_intersect($set, $options) !== array());
+
+        // check SP
+        $options = array('saml2', 'shib13', 'saml20-sp', 'shib13-sp');
+        $this->roles['SAML2_XML_md_SPSSODescriptor'] = (array_intersect($set, $options) !== array());
+
+        // check AA
+        $options = array('saml2', 'shib13', 'saml20-aa', 'shib13-aa');
+        $this->roles['SAML2_XML_md_AttributeAuthorityDescriptor'] = (array_intersect($set, $options) !== array());
+
+        $this->cacheId = sha1($this->cacheId . serialize($this->protocols) . serialize($this->roles));
+    }
 
 	/**
 	 * Retrieve the complete, signed metadata as text.
@@ -436,6 +687,8 @@ class sspmod_aggregator2_Aggregator {
 	public function updateCachedMetadata() {
 
 		$ed = $this->getEntitiesDescriptor();
+        $ed = $this->exclude($ed);
+        $ed = $this->filter($ed);
 		$this->addSignature($ed);
 
 		$xml = $ed->toXML();

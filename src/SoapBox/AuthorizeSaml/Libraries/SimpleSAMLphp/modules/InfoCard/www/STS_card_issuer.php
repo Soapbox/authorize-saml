@@ -126,7 +126,7 @@ function enable_download($username, $cardid){
 	$time = 'x'.time(); //Cannot start with a number	
 	
 	$uuid = uniqid();
-	$handle = fopen(SimpleSAML_Utilities::getTempDir() . "/$uuid",'w');
+	$handle = fopen(SimpleSAML\Utils\System::getTempDir() . DIRECTORY_SEPARATOR . $uuid,'w');
 	if ($handle) {
 		fwrite($handle, strlen($username).$username.strlen($cardid).$cardid.strlen($time).$time);
 		fclose ($handle);
@@ -142,7 +142,7 @@ function enable_download($username, $cardid){
 *
 */
 function disable_download($uuid){
-	unlink("/tmp/$uuid");
+	unlink(SimpleSAML\Utils\System::getTempDir() . DIRECTORY_SEPARATOR . $uuid);
 }
 
 
@@ -152,7 +152,7 @@ function disable_download($uuid){
 */
 function is_card_enabled($uuid, $delivery_time){
 	$now = time();	
-	$filename = SimpleSAML_Utilities::getTempDir() . "/$uuid";
+	$filename = SimpleSAML\Utils\System::getTempDir() . DIRECTORY_SEPARATOR . $uuid;
 	
 	//File check
 	if (!file_exists($filename)) return false; //File doesn't exist
@@ -203,7 +203,7 @@ $configuredIP =   $autoconfig->getValue('configuredIP');
 //RADIUS Request - Send One Time URL
 if ( (strcmp($_GET['ident'],'RADIUS')==0) && (($configuredIP == null) || ($_SERVER['REMOTE_ADDR'] == $configuredIP)) ){
 
-	/* Load the configuration. */
+	// Load the configuration
 	$key =   $autoconfig->getValue('symmetric_key');
 	$internalkey = hash('sha256', $autoconfig->getValue('internal_key'));
 
@@ -250,7 +250,7 @@ if ( (strcmp($_GET['ident'],'RADIUS')==0) && (($configuredIP == null) || ($_SERV
 	$iv = urlsafe_b64decode($_GET['iv']);
 	if ((!$encrequest)||(!$iv)) throw new SimpleSAML_Error_NotFound('The URL wasn\'t found in the module.');
 
-	/* Load the configuration. */
+	// Load the configuration
 	$internalkey = hash('sha256', $autoconfig->getValue('internal_key'));
 	$certificates =   $autoconfig->getValue('certificates');
 	$ICconfig['InfoCard'] = $autoconfig->getValue('InfoCard');
@@ -283,6 +283,3 @@ if ( (strcmp($_GET['ident'],'RADIUS')==0) && (($configuredIP == null) || ($_SERV
 		throw new SimpleSAML_Error_NotFound('The URL wasn\'t found in the module.');
 	}
 }
-
-
-?>

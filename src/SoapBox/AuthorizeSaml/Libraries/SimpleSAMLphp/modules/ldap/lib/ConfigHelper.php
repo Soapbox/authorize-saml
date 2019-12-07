@@ -6,7 +6,7 @@
  * See the ldap-entry in config-templates/authsources.php for information about
  * configuration of these options.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_ldap_ConfigHelper {
 
@@ -44,6 +44,13 @@ class sspmod_ldap_ConfigHelper {
 	 * @var int
 	 */
 	private $timeout;
+
+	/**
+	 * The port used when accessing the LDAP server.
+	 *
+	 * @var int
+	 */
+	private $port;
 
 	/**
 	 * Whether to follow referrals
@@ -123,13 +130,14 @@ class sspmod_ldap_ConfigHelper {
 
 		$this->location = $location;
 
-		/* Parse configuration. */
+		// Parse configuration
 		$config = SimpleSAML_Configuration::loadFromArray($config, $location);
 
 		$this->hostname = $config->getString('hostname');
 		$this->enableTLS = $config->getBoolean('enable_tls', FALSE);
 		$this->debug = $config->getBoolean('debug', FALSE);
 		$this->timeout = $config->getInteger('timeout', 0);
+		$this->port = $config->getInteger('port', 389);
 		$this->referrals = $config->getBoolean('referrals', TRUE);
 		$this->searchEnable = $config->getBoolean('search.enable', FALSE);
 		$this->privRead = $config->getBoolean('priv.read', FALSE);
@@ -147,7 +155,7 @@ class sspmod_ldap_ConfigHelper {
 			$this->dnPattern = $config->getString('dnpattern');
 		}
 
-		/* Are privs needed to get to the attributes? */
+		// Are privs needed to get to the attributes?
 		if ($this->privRead) {
 			$this->privUsername = $config->getString('priv.username');
 			$this->privPassword = $config->getString('priv.password');
@@ -177,7 +185,7 @@ class sspmod_ldap_ConfigHelper {
 			throw new SimpleSAML_Error_Error('WRONGUSERPASS');
 		}
 
-		$ldap = new SimpleSAML_Auth_LDAP($this->hostname, $this->enableTLS, $this->debug, $this->timeout, 389, $this->referrals);
+		$ldap = new SimpleSAML_Auth_LDAP($this->hostname, $this->enableTLS, $this->debug, $this->timeout, $this->port, $this->referrals);
 
 		if (!$this->searchEnable) {
 			$ldapusername = addcslashes($username, ',+"\\<>;*');
@@ -245,7 +253,7 @@ class sspmod_ldap_ConfigHelper {
 			$this->enableTLS,
 			$this->debug,
 			$this->timeout,
-			389,
+			$this->port,
 			$this->referrals);
 
 		if ($attribute == NULL)
@@ -269,7 +277,7 @@ class sspmod_ldap_ConfigHelper {
 			$this->enableTLS,
 			$this->debug,
 			$this->timeout,
-			389,
+			$this->port,
 			$this->referrals);
 
 		/* Are privs needed to get the attributes? */

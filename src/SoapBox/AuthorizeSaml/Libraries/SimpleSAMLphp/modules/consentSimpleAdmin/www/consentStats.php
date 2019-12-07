@@ -5,9 +5,10 @@
  * shows statistics.
  *
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 
+SimpleSAML\Utils\Auth::requireAdmin();
 
 // Get config object
 $config = SimpleSAML_Configuration::getInstance();
@@ -20,8 +21,6 @@ $consent_storage = sspmod_consent_Store::parseStoreConfig($consentconfig->getVal
 // Get all consents for user
 $stats = $consent_storage->getStatistics();
 
-#print_r($stats); exit;
-
 // Init template
 $t = new SimpleSAML_XHTML_Template($config, 'consentSimpleAdmin:consentstats.php');
 
@@ -29,4 +28,3 @@ $t->data['stats'] = $stats;
 
 
 $t->show();
-?>

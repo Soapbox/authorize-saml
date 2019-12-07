@@ -4,8 +4,11 @@
  * Authentication source for Apache 'htpasswd' files.
  *
  * @author Dyonisius (Dick) Visser, TERENA.
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
+
+use WhiteHat101\Crypt\APR1_MD5;
+
 class sspmod_authcrypt_Auth_Source_Htpasswd extends sspmod_core_Auth_UserPassBase {
 
 
@@ -24,7 +27,7 @@ class sspmod_authcrypt_Auth_Source_Htpasswd extends sspmod_core_Auth_UserPassBas
 		assert('is_array($info)');
 		assert('is_array($config)');
 
-		/* Call the parent constructor first, as required by the interface. */
+		// Call the parent constructor first, as required by the interface
 		parent::__construct($info, $config);
 
 		$this->users = array();
@@ -36,7 +39,7 @@ class sspmod_authcrypt_Auth_Source_Htpasswd extends sspmod_core_Auth_UserPassBas
 		$this->users = explode("\n", trim($htpasswd));
 
 		try {
-			$this->attributes = SimpleSAML_Utilities::parseAttributes($config['static_attributes']);
+			$this->attributes = SimpleSAML\Utils\Attributes::normalizeAttributesArray($config['static_attributes']);
 		} catch(Exception $e) {
 			throw new Exception('Invalid static_attributes in authentication source ' .
 				$this->authId . ': ' .	$e->getMessage());
@@ -71,20 +74,22 @@ class sspmod_authcrypt_Auth_Source_Htpasswd extends sspmod_core_Auth_UserPassBas
 				$attributes = array_merge(array('uid' => array($username)), $this->attributes);
 
 				// Traditional crypt(3)
-				if(crypt($password, $crypted) == $crypted) {
+				if (SimpleSAML\Utils\Crypto::secureCompare($crypted, crypt($password, $crypted))) {
 					SimpleSAML_Logger::debug('User '. $username . ' authenticated successfully');
+					SimpleSAML_Logger::warning('CRYPT authentication is insecure. Please consider using something else.');
 					return $attributes;
 				}
 
 				// Apache's custom MD5
-				if(SimpleSAML_Utils_Crypto::apr1Md5Valid($crypted, $password)) {
+				if(APR1_MD5::check($password, $crypted)) {
 					SimpleSAML_Logger::debug('User '. $username . ' authenticated successfully');
 					return $attributes;
 				}
 
 				// SHA1 or plain-text
-				if(SimpleSAML_Utils_Crypto::pwValid($crypted, $password)) {
+				if(SimpleSAML\Utils\Crypto::pwValid($crypted, $password)) {
 					SimpleSAML_Logger::debug('User '. $username . ' authenticated successfully');
+					SimpleSAML_Logger::warning('SHA1 and PLAIN TEXT authentication are insecure. Please consider using something else.');
 					return $attributes;
 				}
 				throw new SimpleSAML_Error_Error('WRONGUSERPASS');

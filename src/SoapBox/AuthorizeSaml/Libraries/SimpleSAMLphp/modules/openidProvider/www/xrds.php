@@ -3,7 +3,8 @@
 /**
  * This endpoint returns an XRDS document describing this server.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
+ * @version $Id$
  */
 
 if (isset($_REQUEST['user'])) {

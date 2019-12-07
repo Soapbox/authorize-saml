@@ -1,6 +1,6 @@
 <?php
 /* 
- * The configuration of simpleSAMLphp sanitycheck package
+ * The configuration of SimpleSAMLphp sanitycheck package
  */
 
 $config = array (
@@ -14,5 +14,3 @@ $config = array (
 	'cron_tag' => 'hourly',
 
 );
-
-?>

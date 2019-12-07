@@ -6,53 +6,63 @@
  *
  * @author Wessel Dankers, Tilburg University
  */
-function check_credentials() {
-	
-	if (!array_key_exists('ssp_state', $_REQUEST))
-		throw new SimpleSAML_Error_Exception("Missing ssp_state parameter");
-	$id = $_REQUEST['ssp_state'];
 
-	// sanitize the input
-	$sid = SimpleSAML_Utilities::parseStateID($id);
-	if (!is_null($sid['url'])) {
-		SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-	}
+if(!array_key_exists('a-select-server', $_REQUEST))
+	SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing a-select-server parameter"));
+$server_id = $_REQUEST['a-select-server'];
 
-	$state = SimpleSAML_Auth_State::loadState($id, 'aselect:login');
+if(!array_key_exists('aselect_credentials', $_REQUEST))
+	SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing aselect_credentials parameter"));
+$credentials = $_REQUEST['aselect_credentials'];
 
-	if(!array_key_exists('a-select-server', $_REQUEST))
-		SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing a-select-server parameter"));
-	$server_id = $_REQUEST['a-select-server'];
+if(!array_key_exists('rid', $_REQUEST))
+	SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing rid parameter"));
+$rid = $_REQUEST['rid'];
 
-	if(!array_key_exists('aselect_credentials', $_REQUEST))
-		SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing aselect_credentials parameter"));
-	$credentials = $_REQUEST['aselect_credentials'];
+if(!array_key_exists('ssp_state', $_REQUEST))
+	throw new SimpleSAML_Error_Exception("Missing ssp_state parameter");
+$id = $_REQUEST['ssp_state'];
 
-	if(!array_key_exists('rid', $_REQUEST))
-		SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Missing rid parameter"));
-	$rid = $_REQUEST['rid'];
+// sanitize the input
+$sid = SimpleSAML_Utilities::parseStateID($id);
+if(!is_null($sid['url']))
+	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
 
-	try {
-		if(!array_key_exists('aselect::authid', $state))
-			throw new SimpleSAML_Error_Exception("ASelect authentication source missing in state");
-		$authid = $state['aselect::authid'];
-		$aselect = SimpleSAML_Auth_Source::getById($authid);
-		if(is_null($aselect))
-			throw new SimpleSAML_Error_Exception("Could not find authentication source with id $authid");
-		$creds = $aselect->verify_credentials($server_id, $credentials, $rid);
+$state = SimpleSAML_Auth_State::loadState($id, 'aselect:login');
 
-		if(array_key_exists('attributes', $creds)) {
+try {
+	if(!array_key_exists('aselect::authid', $state))
+		throw new SimpleSAML_Error_Exception("ASelect authentication source missing in state");
+
+	$authid = $state['aselect::authid'];
+	$aselect = SimpleSAML_Auth_Source::getById($authid);
+	if(is_null($aselect))
+		throw new SimpleSAML_Error_Exception("Could not find authentication source with id $authid");
+
+	$creds = $aselect->verify_credentials($server_id, $credentials, $rid);
+
+	if($state['aselect::add_default_attributes'] === true) {
+		// Add default attributes
+		$state['Attributes'] = array('uid' => array($creds['uid']), 'organization' => array($creds['organization']));
+		if(array_key_exists('attributes', $creds))
+			$state['Attributes'] = array_merge($state['Attributes'], $creds['attributes']);
+	} elseif($state['aselect::add_default_attributes'] === false) {
+		// Do not add default attributes
+		if(array_key_exists('attributes', $creds))
 			$state['Attributes'] = $creds['attributes'];
-		} else {
-			$res = $creds['res'];
-			$state['Attributes'] = array('uid' => array($res['uid']), 'organization' => array($res['organization']));
-		}
-	} catch(Exception $e) {
-		SimpleSAML_Auth_State::throwException($state, $e);
+		else
+			$state['Attributes'] = array();
+	} else {
+		// Legacy behaviour: add default attributes if no attributes are returned
+		if(array_key_exists('attributes', $creds))
+			$state['Attributes'] = $creds['attributes'];
+		else
+			$state['Attributes'] = array('uid' => array($creds['uid']), 'organization' => array($creds['organization']));
 	}
 
-	SimpleSAML_Auth_Source::completeAuth($state);
-	SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Internal error in A-Select component"));
+} catch(Exception $e) {
+	SimpleSAML_Auth_State::throwException($state, $e);
 }
 
-check_credentials();
+SimpleSAML_Auth_Source::completeAuth($state);
+SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_Exception("Internal error in A-Select component"));

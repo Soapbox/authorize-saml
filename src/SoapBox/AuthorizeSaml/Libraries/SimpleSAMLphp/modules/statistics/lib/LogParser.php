@@ -1,7 +1,7 @@
 <?php
 /*
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_statistics_LogParser {
 
@@ -38,9 +38,6 @@ class sspmod_statistics_LogParser {
 			$year = gmdate('Y', $epoch) - 1;
 			$epoch = gmmktime($hour, $minute, $second, $month, $day, $year);
 		}
-
-// 		echo 'debug   ' . $line . "\n";
-// 		echo 'debug   [' . substr($line, 0, $this->datelength)  . '] => [' . $epoch . ']' . "\n";
 		return $epoch;
 	}
 
@@ -68,5 +65,3 @@ class sspmod_statistics_LogParser {
 
 
 }
-
-?>

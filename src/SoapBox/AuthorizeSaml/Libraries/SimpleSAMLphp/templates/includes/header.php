@@ -29,12 +29,12 @@ if (array_key_exists('pageid', $this->data)) {
 // - o - o - o - o - o - o - o - o - o - o - o - o -
 
 /**
- * Do not allow to frame simpleSAMLphp pages from another location.
+ * Do not allow to frame SimpleSAMLphp pages from another location.
  * This prevents clickjacking attacks in modern browsers.
  *
  * If you don't want any framing at all you can even change this to
  * 'DENY', or comment it out if you actually want to allow foreign
- * sites to put simpleSAMLphp in a frame. The latter is however
+ * sites to put SimpleSAMLphp in a frame. The latter is however
  * probably not a good security practice.
  */
 header('X-Frame-Options: SAMEORIGIN');
@@ -43,13 +43,13 @@ header('X-Frame-Options: SAMEORIGIN');
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+<meta name="viewport" content="initial-scale=1.0" />
 <script type="text/javascript" src="/<?php echo $this->data['baseurlpath']; ?>resources/script.js"></script>
 <title><?php
 if(array_key_exists('header', $this->data)) {
 	echo $this->data['header'];
 } else {
-	echo 'simpleSAMLphp';
+	echo 'SimpleSAMLphp';
 }
 ?></title>
 
@@ -59,32 +59,26 @@ if(array_key_exists('header', $this->data)) {
 <?php
 
 if(!empty($jquery)) {
-	$version = '1.5';
+	$version = '1.8';
 	if (array_key_exists('version', $jquery))
 		$version = $jquery['version'];
 		
-	if ($version == '1.5') {
+	if ($version == '1.8') {
 		if (isset($jquery['core']) && $jquery['core'])
-			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery.js"></script>' . "\n");
+			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery-1.8.js"></script>' . "\n");
 	
 		if (isset($jquery['ui']) && $jquery['ui'])
-			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery-ui.js"></script>' . "\n");
+			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery-ui-1.8.js"></script>' . "\n");
 	
 		if (isset($jquery['css']) && $jquery['css'])
 			echo('<link rel="stylesheet" media="screen" type="text/css" href="/' . $this->data['baseurlpath'] . 
-				'resources/uitheme/jquery-ui-themeroller.css" />' . "\n");	
-			
-	} else if ($version == '1.6') {
-		if (isset($jquery['core']) && $jquery['core'])
-			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery-16.js"></script>' . "\n");
-	
-		if (isset($jquery['ui']) && $jquery['ui'])
-			echo('<script type="text/javascript" src="/' . $this->data['baseurlpath'] . 'resources/jquery-ui-16.js"></script>' . "\n");
-	
-		if (isset($jquery['css']) && $jquery['css'])
-			echo('<link rel="stylesheet" media="screen" type="text/css" href="/' . $this->data['baseurlpath'] . 
-				'resources/uitheme16/ui.all.css" />' . "\n");	
+				'resources/uitheme1.8/jquery-ui.css" />' . "\n");
 	}
+}
+
+if (isset($this->data['clipboard.js'])) {
+	echo '<script type="text/javascript" src="/'. $this->data['baseurlpath'] .
+		 'resources/clipboard.min.js"></script>'."\n";
 }
 
 if(!empty($this->data['htmlinject']['htmlContentHead'])) {
@@ -132,7 +126,7 @@ if($onLoad !== '') {
 	
 	<div id="header">
 		<h1><a style="text-decoration: none; color: white" href="/<?php echo $this->data['baseurlpath']; ?>"><?php 
-			echo (isset($this->data['header']) ? $this->data['header'] : 'simpleSAMLphp'); 
+			echo (isset($this->data['header']) ? $this->data['header'] : 'SimpleSAMLphp');
 		?></a></h1>
 	</div>
 
@@ -197,7 +191,7 @@ if($onLoad !== '') {
 				if ($current) {
 					$textarray[] = $langnames[$lang];
 				} else {
-					$textarray[] = '<a href="' . htmlspecialchars(SimpleSAML_Utilities::addURLparameter(SimpleSAML_Utilities::selfURL(), array($this->languageParameterName => $lang))) . '">' .
+					$textarray[] = '<a href="' . htmlspecialchars(\SimpleSAML\Utils\HTTP::addURLParameters(\SimpleSAML\Utils\HTTP::getSelfURL(), array($this->languageParameterName => $lang))) . '">' .
 						$langnames[$lang] . '</a>';
 				}
 			}

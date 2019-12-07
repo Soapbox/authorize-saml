@@ -6,23 +6,15 @@
  * username/password authentication.
  *
  * @author Olav Morken, UNINETT AS.
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 
+// Retrieve the authentication state
 if (!array_key_exists('AuthState', $_REQUEST)) {
 	throw new SimpleSAML_Error_BadRequest('Missing AuthState parameter.');
 }
 $authStateId = $_REQUEST['AuthState'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($authStateId);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
-/* Retrieve the authentication state. */
 $state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_core_Auth_UserPassBase::STAGEID);
-
 
 $source = SimpleSAML_Auth_Source::getById($state[sspmod_core_Auth_UserPassBase::AUTHID]);
 if ($source === NULL) {
@@ -50,7 +42,7 @@ $errorCode = NULL;
 $errorParams = NULL;
 
 if (!empty($_REQUEST['username']) || !empty($password)) {
-	/* Either username or password set - attempt to log in. */
+	// Either username or password set - attempt to log in
 
 	if (array_key_exists('forcedUsername', $state)) {
 		$username = $state['forcedUsername'];
@@ -61,7 +53,7 @@ if (!empty($_REQUEST['username']) || !empty($password)) {
 		$params = $sessionHandler->getCookieParams();
 		$params['expire'] = time();
 		$params['expire'] += (isset($_REQUEST['remember_username']) && $_REQUEST['remember_username'] == 'Yes' ? 31536000 : -300);
-		SimpleSAML_Utilities::setCookie($source->getAuthId() . '-username', $username, $params, FALSE);
+        \SimpleSAML\Utils\HTTP::setCookie($source->getAuthId() . '-username', $username, $params, FALSE);
 	}
 
     if ($source->isRememberMeEnabled()) {

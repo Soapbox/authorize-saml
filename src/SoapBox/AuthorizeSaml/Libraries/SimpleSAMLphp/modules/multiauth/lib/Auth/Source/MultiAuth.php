@@ -5,7 +5,7 @@
  * other authentication sources
  *
  * @author Lorenzo Gil, Yaco Sistemas S.L.
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 
 class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
@@ -45,7 +45,7 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 		assert('is_array($info)');
 		assert('is_array($config)');
 
-		/* Call the parent constructor first, as required by the interface. */
+		// Call the parent constructor first, as required by the interface
 		parent::__construct($info, $config);
 
 		if (!array_key_exists('sources', $config)) {
@@ -72,7 +72,7 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 			if (array_key_exists('css-class', $info)) {
 				$css_class = $info['css-class'];
 			} else {
-				/* Use the authtype as the css class */
+				// Use the authtype as the css class
 				$authconfig = $authsources->getArray($source, NULL);
 				if (!array_key_exists(0, $authconfig) || !is_string($authconfig[0])) {
 					$css_class = "";
@@ -120,7 +120,7 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 			$params['source'] = $_GET['source'];
 		}
 
-		SimpleSAML_Utilities::redirectTrustedURL($url, $params);
+		\SimpleSAML\Utils\HTTP::redirectTrustedURL($url, $params);
 
 		/* The previous function never returns, so this code is never
 		executed */
@@ -143,7 +143,13 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 		assert('is_array($state)');
 
 		$as = SimpleSAML_Auth_Source::getById($authId);
-		if ($as === NULL) {
+		$valid_sources = array_map(
+			function($src) {
+				return $src['source'];
+			},
+			$state[self::SOURCESID]
+        );
+		if ($as === NULL || !in_array($authId, $valid_sources)) {
 			throw new Exception('Invalid authentication source: ' . $authId);
 		}
 
@@ -203,12 +209,12 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 			/* We save the cookies for 90 days. */
 			'lifetime' => (60*60*24*90),
 			/* The base path for cookies.
-			This should be the installation directory for simpleSAMLphp. */
+			This should be the installation directory for SimpleSAMLphp. */
 			'path' => ('/' . $config->getBaseUrl()),
 			'httponly' => FALSE,
 		);
 
-		SimpleSAML_Utilities::setCookie($cookieName, $source, $params, FALSE);
+        \SimpleSAML\Utils\HTTP::setCookie($cookieName, $source, $params, FALSE);
 	}
 
 	/**
@@ -226,5 +232,3 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 		}
 	}
 }
-
-?>

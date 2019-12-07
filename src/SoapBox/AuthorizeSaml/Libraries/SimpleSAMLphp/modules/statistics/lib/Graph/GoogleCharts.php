@@ -4,7 +4,7 @@
  * using the Google Charts API. 
  *
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class sspmod_statistics_Graph_GoogleCharts {
 
@@ -46,13 +46,11 @@ class sspmod_statistics_Graph_GoogleCharts {
 			if($v >= 0 && $v <= 100){ 
 				$first = substr($extended_table, intval( ($delta*$v/100) / $size),1);
 				$second = substr($extended_table, intval( ($delta*$v/100) % $size), 1);
-				$chardata .= "$first$second"; 
-				#echo '<p>encoding ' . $v . ' to ' . $first . ' ' . $second . '';
+				$chardata .= "$first$second";
 			} else { 
 				$chardata .= '__'; // Value out of max range; 
 			} 
-		} 
-		#echo ' encoding ' . join(' ', $values) . ' to ' . $chardata; exit;
+		}
 		return($chardata); 
 	}
 	
@@ -101,11 +99,10 @@ class sspmod_statistics_Graph_GoogleCharts {
 			// Dimension of graph. Default is 800x350
 			'chs=' . $this->x . 'x' . $this->y . 
 			
-			// Dateset values.
+			// Dateset values
 			'&chd=' . $this->encodedata($datasets) .
 			
 			// Fill area...
-#			$this->getFillArea($datasets) . 
 			'&chco=ff5c00,cca600' . 
 			'&chls=1,1,0|1,6,3' .
 			
@@ -113,9 +110,7 @@ class sspmod_statistics_Graph_GoogleCharts {
 			'&cht=lc' .
 			$labeld .
 			'&chxl=0:|' . $this->encodeaxis($axis) . # . $'|1:||top' .
-			'&chxp=0,' . join(',', $axispos) . 
-#			'&chxp=0,0.3,0.4' .
-#			'&chm=R,CCCCCC,0,0.25,0.5' .
+			'&chxp=0,' . join(',', $axispos) .
 			'&chg=' . (2400/(count($datasets[0])-1)) . ',-1,3,3';   // lines
 		return $url;
 	}
@@ -180,5 +175,3 @@ class sspmod_statistics_Graph_GoogleCharts {
 	}
 
 }
-
-?>

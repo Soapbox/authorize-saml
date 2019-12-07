@@ -5,7 +5,7 @@
  * This script displays a page to the user, which requests that the user
  * authorizes the release of attributes.
  *
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 /**
  * Explicit instruct consent page to send no-cache header to browsers to make 
@@ -30,13 +30,6 @@ if (!array_key_exists('StateId', $_REQUEST)) {
 }
 
 $id = $_REQUEST['StateId'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($id);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
 $state = SimpleSAML_Auth_State::loadState($id, 'consent:request');
 
 if (array_key_exists('core:SP', $state)) {
@@ -68,7 +61,7 @@ if (array_key_exists('yes', $_REQUEST)) {
         && array_key_exists('saveconsent', $_REQUEST)
         && $_REQUEST['saveconsent'] === '1'
     ) {
-        /* Save consent. */
+        // Save consent
         $store = $state['consent:store'];
         $userId = $state['consent:store.userId'];
         $targetedId = $state['consent:store.destination'];

@@ -6,7 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'SimpleSAML_' => array($baseDir . '/lib'),
+    'SimpleSamlPhp\\Composer' => array($vendorDir . '/simplesamlphp/composer-module-installer/src'),
+    'SimpleSAML' => array($baseDir . '/lib'),
     'SAML2_' => array($vendorDir . '/simplesamlphp/saml2/src'),
-    'Psr\\Log\\' => array($vendorDir . '/psr/log'),
 );

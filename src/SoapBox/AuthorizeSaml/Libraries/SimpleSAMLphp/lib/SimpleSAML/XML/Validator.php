@@ -4,7 +4,7 @@
  * This class implements helper functions for XML validation.
  *
  * @author Olav Morken, UNINETT AS. 
- * @package simpleSAMLphp
+ * @package SimpleSAMLphp
  */
 class SimpleSAML_XML_Validator {
 
@@ -50,10 +50,10 @@ class SimpleSAML_XML_Validator {
 			assert('$publickey === FALSE || is_array($publickey)');
 		}
 
-		/* Create an XML security object. */
+		// Create an XML security object
 		$objXMLSecDSig = new XMLSecurityDSig();
 
-		/* Add the id attribute if the user passed in an id attribute. */
+		// Add the id attribute if the user passed in an id attribute
 		if($idAttribute !== NULL) {
 			if (is_string($idAttribute)) {
 				$objXMLSecDSig->idKeys[] = $idAttribute;
@@ -63,33 +63,33 @@ class SimpleSAML_XML_Validator {
 			}
 		}
 
-		/* Locate the XMLDSig Signature element to be used. */
+		// Locate the XMLDSig Signature element to be used
 		$signatureElement = $objXMLSecDSig->locateSignature($xmlNode);
 		if (!$signatureElement) {
 			throw new Exception('Could not locate XML Signature element.');
 		}
 
-		/* Canonicalize the XMLDSig SignedInfo element in the message. */
+		// Canonicalize the XMLDSig SignedInfo element in the message
 		$objXMLSecDSig->canonicalizeSignedInfo();
 
-		/* Validate referenced xml nodes. */
+		// Validate referenced xml nodes
 		if (!$objXMLSecDSig->validateReference()) {
 			throw new Exception('XMLsec: digest validation failed');
 		}
 
 
-		/* Find the key used to sign the document. */
+		// Find the key used to sign the document
 		$objKey = $objXMLSecDSig->locateKey();
 		if (empty($objKey)) {
 			throw new Exception('Error loading key to handle XML signature');
 		}
 
-		/* Load the key data. */
+		// Load the key data
 		if ($publickey !== FALSE && array_key_exists('PEM', $publickey)) {
-			/* We have PEM data for the public key / certificate. */
+			// We have PEM data for the public key / certificate
 			$objKey->loadKey($publickey['PEM']);
 		} else {
-			/* No PEM data. Search for key in signature. */
+			// No PEM data. Search for key in signature
 
 			if (!XMLSecEnc::staticLocateKeyInfo($objKey, $signatureElement)) {
 				throw new Exception('Error finding key data for XML signature validation.');
@@ -104,25 +104,25 @@ class SimpleSAML_XML_Validator {
 
 				$certificate = $objKey->getX509Certificate();
 				if ($certificate === NULL) {
-					/* Wasn't signed with an X509 certificate. */
+					// Wasn't signed with an X509 certificate
 					throw new Exception('Message wasn\'t signed with an X509 certificate,' .
 						' and no public key was provided in the metadata.');
 				}
 
 				self::validateCertificateFingerprint($certificate, $publickey['certFingerprint']);
-				/* Key OK. */
+				// Key OK
 			}
 		}
 
-		/* Check the signature. */
-		if (! $objXMLSecDSig->verify($objKey)) {
+		// Check the signature
+		if ($objXMLSecDSig->verify($objKey) !== 1) {
 			throw new Exception("Unable to validate Signature");
 		}
 
-		/* Extract the certificate. */
+		// Extract the certificate
 		$this->x509Certificate = $objKey->getX509Certificate();
 
-		/* Find the list of validated nodes. */
+		// Find the list of validated nodes
 		$this->validNodes = $objXMLSecDSig->getValidatedNodes();
 	}
 
@@ -156,19 +156,19 @@ class SimpleSAML_XML_Validator {
 		$data = '';
 
 		foreach($lines as $line) {
-			/* Remove '\r' from end of line if present. */
+			// Remove '\r' from end of line if present
 			$line = rtrim($line);
 			if($line === '-----BEGIN CERTIFICATE-----') {
-				/* Delete junk from before the certificate. */
+				// Delete junk from before the certificate
 				$data = '';
 			} elseif($line === '-----END CERTIFICATE-----') {
-				/* Ignore data after the certificate. */
+				// Ignore data after the certificate
 				break;
 			} elseif($line === '-----BEGIN PUBLIC KEY-----') {
-				/* This isn't an X509 certificate. */
+				// This isn't an X509 certificate
 				return NULL;
 			} else {
-				/* Append the current line to the certificate data. */
+				// Append the current line to the certificate data
 				$data .= $line;
 			}
 		}
@@ -195,7 +195,7 @@ class SimpleSAML_XML_Validator {
 
 		$certFingerprint = self::calculateX509Fingerprint($certificate);
 		if ($certFingerprint === NULL) {
-			/* Couldn't calculate fingerprint from X509 certificate. Should not happen. */
+			// Couldn't calculate fingerprint from X509 certificate. Should not happen.
 			throw new Exception('Unable to calculate fingerprint from X509' .
 				' certificate. Maybe it isn\'t an X509 certificate?');
 		}
@@ -204,13 +204,13 @@ class SimpleSAML_XML_Validator {
 			assert('is_string($fp)');
 
 			if ($fp === $certFingerprint) {
-				/* The fingerprints matched. */
+				// The fingerprints matched
 				return;
 			}
 
 		}
 
-		/* None of the fingerprints matched. Throw an exception describing the error. */
+		// None of the fingerprints matched. Throw an exception describing the error.
 		throw new Exception('Invalid fingerprint of certificate. Expected one of [' .
 			implode('], [', $fingerprints) . '], but got [' . $certFingerprint . ']');
 	}
@@ -237,11 +237,11 @@ class SimpleSAML_XML_Validator {
 			$fingerprints = array($fingerprints);
 		}
 
-		/* Normalize the fingerprints. */
+		// Normalize the fingerprints
 		foreach($fingerprints as &$fp) {
 			assert('is_string($fp)');
 
-			/* Make sure that the fingerprint is in the correct format. */
+			// Make sure that the fingerprint is in the correct format
 			$fp = strtolower(str_replace(":", "", $fp));
 		}
 
@@ -260,7 +260,7 @@ class SimpleSAML_XML_Validator {
 		assert('$node instanceof DOMNode');
 
 		while($node !== NULL) {
-			if(in_array($node, $this->validNodes)) {
+			if(in_array($node, $this->validNodes, true)) {
 				return TRUE;
 			}
 
@@ -289,9 +289,134 @@ class SimpleSAML_XML_Validator {
 			throw new Exception('Key used to sign the message was not an X509 certificate.');
 		}
 
-		SimpleSAML_Utilities::validateCA($this->x509Certificate, $caFile);
+		self::validateCertificate($this->x509Certificate, $caFile);
+	}
+
+	/**
+	 * Validate a certificate against a CA file, by using the builtin
+	 * openssl_x509_checkpurpose function
+	 *
+	 * @param string $certificate  The certificate, in PEM format.
+	 * @param string $caFile  File with trusted certificates, in PEM-format.
+	 * @return boolean|string TRUE on success, or a string with error messages if it failed.
+	 * @deprecated
+	 */
+	private static function validateCABuiltIn($certificate, $caFile) {
+		assert('is_string($certificate)');
+		assert('is_string($caFile)');
+
+		// Clear openssl errors
+		while(openssl_error_string() !== FALSE);
+
+		$res = openssl_x509_checkpurpose($certificate, X509_PURPOSE_ANY, array($caFile));
+
+		$errors = '';
+		// Log errors
+		while( ($error = openssl_error_string()) !== FALSE) {
+			$errors .= ' [' . $error . ']';
+		}
+
+		if($res !== TRUE) {
+			return $errors;
+		}
+
+		return TRUE;
+	}
+
+
+	/**
+	 * Validate the certificate used to sign the XML against a CA file, by using the "openssl verify" command.
+	 *
+	 * This function uses the openssl verify command to verify a certificate, to work around limitations
+	 * on the openssl_x509_checkpurpose function. That function will not work on certificates without a purpose
+	 * set.
+	 *
+	 * @param string $certificate  The certificate, in PEM format.
+	 * @param string $caFile  File with trusted certificates, in PEM-format.
+	 * @return boolean|string TRUE on success, a string with error messages on failure.
+	 * @deprecated
+	 */
+	private static function validateCAExec($certificate, $caFile) {
+		assert('is_string($certificate)');
+		assert('is_string($caFile)');
+
+		$command = array(
+			'openssl', 'verify',
+			'-CAfile', $caFile,
+			'-purpose', 'any',
+		);
+
+		$cmdline = '';
+		foreach($command as $c) {
+			$cmdline .= escapeshellarg($c) . ' ';
+		}
+
+		$cmdline .= '2>&1';
+		$descSpec = array(
+			0 => array('pipe', 'r'),
+			1 => array('pipe', 'w'),
+		);
+		$process = proc_open($cmdline, $descSpec, $pipes);
+		if (!is_resource($process)) {
+			throw new Exception('Failed to execute verification command: ' . $cmdline);
+		}
+
+		if (fwrite($pipes[0], $certificate) === FALSE) {
+			throw new Exception('Failed to write certificate for verification.');
+		}
+		fclose($pipes[0]);
+
+		$out = '';
+		while (!feof($pipes[1])) {
+			$line = trim(fgets($pipes[1]));
+			if(strlen($line) > 0) {
+				$out .= ' [' . $line . ']';
+			}
+		}
+		fclose($pipes[1]);
+
+		$status = proc_close($process);
+		if ($status !== 0 || $out !== ' [stdin: OK]') {
+			return $out;
+		}
+
+		return TRUE;
+    }
+
+
+	/**
+	 * Validate the certificate used to sign the XML against a CA file.
+	 *
+	 * This function throws an exception if unable to validate against the given CA file.
+	 *
+	 * @param string $certificate  The certificate, in PEM format.
+	 * @param string $caFile  File with trusted certificates, in PEM-format.
+	 * @deprecated
+	 */
+	public static function validateCertificate($certificate, $caFile) {
+		assert('is_string($certificate)');
+		assert('is_string($caFile)');
+
+		if (!file_exists($caFile)) {
+			throw new Exception('Could not load CA file: ' . $caFile);
+		}
+
+		SimpleSAML_Logger::debug('Validating certificate against CA file: ' . var_export($caFile, TRUE));
+
+		$resBuiltin = self::validateCABuiltIn($certificate, $caFile);
+		if ($resBuiltin !== TRUE) {
+			SimpleSAML_Logger::debug('Failed to validate with internal function: ' . var_export($resBuiltin, TRUE));
+
+			$resExternal = self::validateCAExec($certificate, $caFile);
+			if ($resExternal !== TRUE) {
+				SimpleSAML_Logger::debug('Failed to validate with external function: ' . var_export($resExternal, TRUE));
+				throw new Exception('Could not verify certificate against CA file "'
+					. $caFile . '". Internal result:' . $resBuiltin .
+					' External result:' . $resExternal);
+			}
+		}
+
+		SimpleSAML_Logger::debug('Successfully validated certificate.');
 	}
 
 }
-
-?>
