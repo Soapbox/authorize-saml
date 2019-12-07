@@ -68,7 +68,7 @@ class HTTP
             if (!is_numeric($port)) {
                 array_push($decomposed, $port);
             }
-            $current = implode($decomposed, ":");
+            $current = implode(":", $decomposed);
         }
         return $current;
     }
@@ -431,7 +431,7 @@ class HTTP
         }
 
         $context = stream_context_create($context);
-        $data = file_get_contents($url, false, $context);
+        $data = @file_get_contents($url, false, $context);
         if ($data === false) {
             $error = error_get_last();
             throw new \SimpleSAML_Error_Exception('Error fetching '.var_export($url, true).':'.
@@ -582,8 +582,7 @@ class HTTP
         if (preg_match('#^https?://.*/?$#D', $baseURL, $matches)) {
             // full URL in baseurlpath, override local server values
             return rtrim($baseURL, '/').'/';
-        } elseif (
-            (preg_match('#^/?([^/]?.*/)$#D', $baseURL, $matches)) ||
+        } elseif ((preg_match('#^/?([^/]?.*/)$#D', $baseURL, $matches)) ||
             (preg_match('#^\*(.*)/$#D', $baseURL, $matches)) ||
             ($baseURL === '')
         ) {
@@ -788,7 +787,7 @@ class HTTP
             return $protocol.'://'.$hostname.$port.$_SERVER['REQUEST_URI'];
         }
 
-        return self::getBaseURL().$rel_path.substr($_SERVER['REQUEST_URI'], $uri_pos + strlen($url_path));
+        return self::getBaseURL().$url_path.substr($_SERVER['REQUEST_URI'], $uri_pos + strlen($url_path));
     }
 
 
@@ -950,7 +949,7 @@ class HTTP
 
     /**
      * This function redirects to the specified URL after performing the appropriate security checks on it.
-     * Particularly, it will make sure that the provided URL is allowed by the 'redirect.trustedsites' directive in the
+     * Particularly, it will make sure that the provided URL is allowed by the 'trusted.url.domains' directive in the
      * configuration.
      *
      * If the aforementioned option is not set or the URL does correspond to a trusted site, it performs a redirection

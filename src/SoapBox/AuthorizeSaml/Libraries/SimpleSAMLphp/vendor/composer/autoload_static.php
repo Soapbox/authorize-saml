@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit898f80cab876a8e68ba8624417630135
+class ComposerStaticInit6cb6df716c05992616bc3076da1905e8
 {
     public static $files = array (
         '6175f5662c2e26de0149cb048cda7209' => __DIR__ . '/..' . '/simplesamlphp/saml2/src/_autoload.php',
@@ -164,6 +164,7 @@ class ComposerStaticInit898f80cab876a8e68ba8624417630135
         'Psr\\Log\\NullLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/NullLogger.php',
         'Psr\\Log\\Test\\DummyTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/LoggerInterfaceTest.php',
         'Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/LoggerInterfaceTest.php',
+        'RobRichards\\XMLSecLibs\\Utils\\XPath' => __DIR__ . '/..' . '/robrichards/xmlseclibs/src/Utils/XPath.php',
         'RobRichards\\XMLSecLibs\\XMLSecEnc' => __DIR__ . '/..' . '/robrichards/xmlseclibs/src/XMLSecEnc.php',
         'RobRichards\\XMLSecLibs\\XMLSecurityDSig' => __DIR__ . '/..' . '/robrichards/xmlseclibs/src/XMLSecurityDSig.php',
         'RobRichards\\XMLSecLibs\\XMLSecurityKey' => __DIR__ . '/..' . '/robrichards/xmlseclibs/src/XMLSecurityKey.php',
@@ -323,6 +324,7 @@ class ComposerStaticInit898f80cab876a8e68ba8624417630135
         'SAML2\\XML\\samlp\\Extensions' => __DIR__ . '/..' . '/simplesamlphp/saml2/src/SAML2/XML/samlp/Extensions.php',
         'SAML2\\XML\\shibmd\\Scope' => __DIR__ . '/..' . '/simplesamlphp/saml2/src/SAML2/XML/shibmd/Scope.php',
         'SimpleSAML\\Auth\\Simple' => __DIR__ . '/../..' . '/lib/SimpleSAML/Auth/Simple.php',
+        'SimpleSAML\\Auth\\SourceFactory' => __DIR__ . '/../..' . '/lib/SimpleSAML/Auth/SourceFactory.php',
         'SimpleSAML\\Auth\\TimeLimitedToken' => __DIR__ . '/../..' . '/lib/SimpleSAML/Auth/TimeLimitedToken.php',
         'SimpleSAML\\Bindings\\Shib13\\Artifact' => __DIR__ . '/../..' . '/lib/SimpleSAML/Bindings/Shib13/Artifact.php',
         'SimpleSAML\\Bindings\\Shib13\\HTTPPost' => __DIR__ . '/../..' . '/lib/SimpleSAML/Bindings/Shib13/HTTPPost.php',
@@ -361,6 +363,7 @@ class ComposerStaticInit898f80cab876a8e68ba8624417630135
         'SimpleSAML\\Utils\\Config\\Metadata' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/Config/Metadata.php',
         'SimpleSAML\\Utils\\Crypto' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/Crypto.php',
         'SimpleSAML\\Utils\\HTTP' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/HTTP.php',
+        'SimpleSAML\\Utils\\HttpAdapter' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/HttpAdapter.php',
         'SimpleSAML\\Utils\\Net' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/Net.php',
         'SimpleSAML\\Utils\\Random' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/Random.php',
         'SimpleSAML\\Utils\\System' => __DIR__ . '/../..' . '/lib/SimpleSAML/Utils/System.php',
@@ -777,10 +780,10 @@ class ComposerStaticInit898f80cab876a8e68ba8624417630135
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit898f80cab876a8e68ba8624417630135::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit898f80cab876a8e68ba8624417630135::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit898f80cab876a8e68ba8624417630135::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit898f80cab876a8e68ba8624417630135::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit6cb6df716c05992616bc3076da1905e8::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit6cb6df716c05992616bc3076da1905e8::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit6cb6df716c05992616bc3076da1905e8::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit6cb6df716c05992616bc3076da1905e8::$classMap;
 
         }, null, ClassLoader::class);
     }

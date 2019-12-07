@@ -351,7 +351,7 @@ class AuthnRequest extends Request
      */
     public function setForceAuthn($forceAuthn)
     {
-        assert('is_bool($forceAuthn)');
+        assert(is_bool($forceAuthn));
 
         $this->forceAuthn = $forceAuthn;
     }
@@ -375,7 +375,7 @@ class AuthnRequest extends Request
      */
     public function setProviderName($ProviderName)
     {
-        assert('is_string($ProviderName)');
+        assert(is_string($ProviderName));
 
         $this->ProviderName = $ProviderName;
     }
@@ -399,7 +399,7 @@ class AuthnRequest extends Request
      */
     public function setIsPassive($isPassive)
     {
-        assert('is_bool($isPassive)');
+        assert(is_bool($isPassive));
 
         $this->isPassive = $isPassive;
     }
@@ -417,10 +417,11 @@ class AuthnRequest extends Request
      * For backward compatibility, an idpEntries can also
      * be a string instead of an array, where each string
      * is mapped to the value of attribute ProviderID.
+     *
+     * @param array List of idpEntries to scope the request to.
      */
-    public function setIDPList($IDPList)
+    public function setIDPList(array $IDPList)
     {
-        assert('is_array($IDPList)');
         $this->IDPList = $IDPList;
     }
 
@@ -440,12 +441,12 @@ class AuthnRequest extends Request
      */
     public function setProxyCount($ProxyCount)
     {
-        assert('is_int($ProxyCount)');
+        assert(is_int($ProxyCount));
         $this->ProxyCount = $ProxyCount;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getProxyCount()
     {
@@ -485,7 +486,7 @@ class AuthnRequest extends Request
      */
     public function setAssertionConsumerServiceURL($assertionConsumerServiceURL)
     {
-        assert('is_string($assertionConsumerServiceURL) || is_null($assertionConsumerServiceURL)');
+        assert(is_string($assertionConsumerServiceURL) || is_null($assertionConsumerServiceURL));
 
         $this->assertionConsumerServiceURL = $assertionConsumerServiceURL;
     }
@@ -507,7 +508,7 @@ class AuthnRequest extends Request
      */
     public function setProtocolBinding($protocolBinding)
     {
-        assert('is_string($protocolBinding) || is_null($protocolBinding)');
+        assert(is_string($protocolBinding) || is_null($protocolBinding));
 
         $this->protocolBinding = $protocolBinding;
     }
@@ -529,7 +530,7 @@ class AuthnRequest extends Request
      */
     public function setAttributeConsumingServiceIndex($attributeConsumingServiceIndex)
     {
-        assert('is_int($attributeConsumingServiceIndex) || is_null($attributeConsumingServiceIndex)');
+        assert(is_int($attributeConsumingServiceIndex) || is_null($attributeConsumingServiceIndex));
 
         $this->attributeConsumingServiceIndex = $attributeConsumingServiceIndex;
     }
@@ -551,7 +552,7 @@ class AuthnRequest extends Request
      */
     public function setAssertionConsumerServiceIndex($assertionConsumerServiceIndex)
     {
-        assert('is_int($assertionConsumerServiceIndex) || is_null($assertionConsumerServiceIndex)');
+        assert(is_int($assertionConsumerServiceIndex) || is_null($assertionConsumerServiceIndex));
 
         $this->assertionConsumerServiceIndex = $assertionConsumerServiceIndex;
     }
@@ -573,7 +574,7 @@ class AuthnRequest extends Request
      */
     public function setRequestedAuthnContext($requestedAuthnContext)
     {
-        assert('is_array($requestedAuthnContext) || is_null($requestedAuthnContext)');
+        assert(is_array($requestedAuthnContext) || is_null($requestedAuthnContext));
 
         $this->requestedAuthnContext = $requestedAuthnContext;
     }
@@ -600,7 +601,7 @@ class AuthnRequest extends Request
      */
     public function setNameId($nameId)
     {
-        assert('is_array($nameId) || is_null($nameId) || is_a($nameId, "\SAML2\XML\saml\NameID")');
+        assert(is_array($nameId) || is_null($nameId) || $nameId instanceof XML\saml\NameID);
 
         if (is_array($nameId)) {
             $nameId = XML\saml\NameID::fromArray($nameId);
@@ -761,7 +762,7 @@ class AuthnRequest extends Request
                                 'ProviderID',
                                 'Loc',
                                 'Name'
-                            ))) {
+                            ), true)) {
                                 $idpEntry->setAttribute($attribute, $value);
                             }
                         }
