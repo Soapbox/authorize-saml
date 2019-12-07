@@ -39,7 +39,7 @@ class SamlHelpers
             );
         }
 
-        if (!($source instanceof \sspmod_saml_Auth_Source_SP)) {
+        if (!($source instanceof \SimpleSAML\Module\saml\Auth\Source\SP)) {
             throw new \SimpleSAML_Error_NotFound(
                 'Source isn\'t a SAML SP: ' . var_export($sourceId, true)
             );
@@ -284,7 +284,7 @@ class SamlHelpers
 
     public static function acs($sourceId = 'dope-sp')
     {
-        $source = \SimpleSAML_Auth_Source::getById($sourceId, 'sspmod_saml_Auth_Source_SP');
+        $source = \SimpleSAML_Auth_Source::getById($sourceId, 'SimpleSAML\\Module\\saml\\Auth\\Source\\SP');
         $spMetadata = $source->getMetadata();
 
         $b = \SAML2_Binding::getCurrentBinding();
