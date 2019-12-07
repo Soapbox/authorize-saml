@@ -7,7 +7,6 @@ Authentication Processing Filters in SimpleSAMLphp
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-authproc.txt 3305 2013-11-27 12:39:53Z jaimepc@gmail.com $`
 
 <!-- {{TOC}} -->
 

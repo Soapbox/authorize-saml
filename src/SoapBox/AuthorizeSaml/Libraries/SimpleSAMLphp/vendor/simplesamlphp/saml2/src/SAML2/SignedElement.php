@@ -3,8 +3,7 @@
 /**
  * Interface to a SAML 2 element which may be signed.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 interface SAML2_SignedElement
 {

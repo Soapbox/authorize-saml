@@ -3,8 +3,7 @@
 /**
  * Class for SAML 2 authentication request messages.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_AuthnRequest extends SAML2_Request
 {
@@ -22,6 +21,15 @@ class SAML2_AuthnRequest extends SAML2_Request
      */
     private $forceAuthn;
 
+
+    /**
+     * Optional ProviderID attribute
+     *
+     * @var string
+     */
+    private $ProviderName;
+
+
     /**
      * Set to TRUE if this request is passive.
      *
@@ -33,21 +41,21 @@ class SAML2_AuthnRequest extends SAML2_Request
      * The list of providerIDs in this request's scoping element
      *
      * @var array
-    */
+     */
     private $IDPList = array();
 
     /**
      * The ProxyCount in this request's scoping element
      *
      * @var int
-    */
+     */
     private $ProxyCount = NULL;
 
     /**
      * The RequesterID list in this request's scoping element
      *
      * @var array
-    */
+     */
 
     private $RequesterID = array();
 
@@ -93,12 +101,6 @@ class SAML2_AuthnRequest extends SAML2_Request
      */
     private $requestedAuthnContext;
 
-    /**
-     * Request extensions.
-     *
-     * @var array
-     */
-    private $extensions;
 
     /**
      * Constructor for SAML 2 authentication request messages.
@@ -195,8 +197,6 @@ class SAML2_AuthnRequest extends SAML2_Request
             }
 
         }
-
-        $this->extensions = SAML2_XML_samlp_Extensions::getList($xml);
     }
 
 
@@ -249,6 +249,30 @@ class SAML2_AuthnRequest extends SAML2_Request
         assert('is_bool($forceAuthn)');
 
         $this->forceAuthn = $forceAuthn;
+    }
+
+
+    /**
+     * Retrieve the value of the ProviderName attribute.
+     *
+     * @return string The ProviderName attribute.
+     */
+    public function getProviderName()
+    {
+        return $this->ProviderName;
+    }
+
+
+    /**
+     * Set the value of the ProviderName attribute.
+     *
+     * @param string $ProviderName The ProviderName attribute.
+     */
+    public function setProviderName($ProviderName)
+    {
+        assert('is_string($ProviderName)');
+
+        $this->ProviderName = $ProviderName;
     }
 
 
@@ -433,27 +457,6 @@ class SAML2_AuthnRequest extends SAML2_Request
         $this->requestedAuthnContext = $requestedAuthnContext;
     }
 
-    /**
-     * Retrieve the Extensions.
-     *
-     * @return SAML2_XML_samlp_Extensions.
-     */
-    public function getExtensions()
-    {
-        return $this->extensions;
-    }
-
-    /**
-     * Set the Extensions.
-     *
-     * @param array|NULL $extensions The Extensions.
-     */
-    public function setExtensions($extensions)
-    {
-        assert('is_array($extensions) || is_null($extensions)');
-
-        $this->extensions = $extensions;
-    }
 
     /**
      * Convert this authentication request to an XML element.
@@ -466,6 +469,11 @@ class SAML2_AuthnRequest extends SAML2_Request
 
         if ($this->forceAuthn) {
             $root->setAttribute('ForceAuthn', 'true');
+        }
+
+
+        if ($this->ProviderName !== NULL) {
+            $root->setAttribute('ProviderName', $this->ProviderName);
         }
 
         if ($this->isPassive) {
@@ -511,10 +519,6 @@ class SAML2_AuthnRequest extends SAML2_Request
             foreach ($rac['AuthnContextClassRef'] as $accr) {
                 SAML2_Utils::addString($e, SAML2_Const::NS_SAML, 'AuthnContextClassRef', $accr);
             }
-        }
-
-        if (!empty($this->extensions)) {
-            SAML2_XML_samlp_Extensions::addList($root, $this->extensions);
         }
 
         if ($this->ProxyCount !== NULL || count($this->IDPList) > 0 || count($this->RequesterID) > 0) {

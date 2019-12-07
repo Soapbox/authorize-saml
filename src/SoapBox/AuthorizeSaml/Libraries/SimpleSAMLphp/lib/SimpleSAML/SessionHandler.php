@@ -10,7 +10,6 @@
  *
  * @author Olav Morken, UNINETT AS. <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
- * @version $Id: SessionHandler.php 3275 2013-09-13 11:03:54Z comel.ah $
  */
 abstract class SimpleSAML_SessionHandler {
 

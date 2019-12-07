@@ -3,8 +3,7 @@
 /**
  * Class representing SAML 2 metadata AdditionalMetadataLocation element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_md_AdditionalMetadataLocation
 {

@@ -4,8 +4,7 @@
  * Implementation of the SAML 2.0 SOAP binding.
  *
  * @author Shoaib Ali
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_SOAPClient
 {

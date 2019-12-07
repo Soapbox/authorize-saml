@@ -7,7 +7,6 @@ Automated Metadata Management
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-automated_metadata.txt 3334 2014-01-27 15:56:13Z jaimepc@gmail.com $`
 
 <!-- {{TOC}} -->
 

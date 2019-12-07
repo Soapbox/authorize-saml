@@ -4,8 +4,7 @@
  * Class which implements the HTTP-Artifact binding.
  *
  * @author  Danny Bollaert, UGent AS. <danny.bollaert@ugent.be>
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_HTTPArtifact extends SAML2_Binding
 {

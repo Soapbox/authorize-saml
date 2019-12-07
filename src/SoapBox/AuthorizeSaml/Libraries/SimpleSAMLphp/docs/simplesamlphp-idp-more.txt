@@ -7,7 +7,6 @@ SimpleSAMLphp Identity Provider Advanced Topics
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-idp-more.txt 3333 2014-01-27 09:28:12Z jaimepc@gmail.com $`
 
 <!-- {{TOC}} -->
 

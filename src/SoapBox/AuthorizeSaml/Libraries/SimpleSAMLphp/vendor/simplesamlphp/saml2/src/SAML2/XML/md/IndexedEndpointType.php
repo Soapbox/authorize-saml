@@ -3,8 +3,7 @@
 /**
  * Class representing SAML 2 IndexedEndpointType.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_md_IndexedEndpointType extends SAML2_XML_md_EndpointType
 {

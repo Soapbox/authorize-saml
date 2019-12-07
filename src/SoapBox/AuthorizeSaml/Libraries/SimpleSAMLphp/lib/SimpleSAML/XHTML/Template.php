@@ -5,7 +5,6 @@
  *
  * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
- * @version $Id: Template.php 3269 2013-09-04 11:12:48Z comel.ah $
  */
 class SimpleSAML_XHTML_Template {
 

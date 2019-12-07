@@ -3,8 +3,7 @@
 /**
  * Class for SAML 2 Response messages.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_Response extends SAML2_StatusResponse
 {

@@ -3,8 +3,7 @@
 /**
  * Class representing a ds:X509Data element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_ds_X509Data
 {

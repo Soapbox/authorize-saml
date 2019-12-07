@@ -3,8 +3,7 @@
 /**
  * Class representing a ds:KeyName element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_ds_KeyName
 {

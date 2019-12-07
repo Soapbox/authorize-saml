@@ -3,8 +3,7 @@
 /**
  * Class representing SAML 2 SubjectConfirmationData element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_saml_SubjectConfirmationData
 {

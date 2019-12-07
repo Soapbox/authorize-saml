@@ -7,7 +7,6 @@ simpleSAMLphp modules
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-modules.txt 3333 2014-01-27 09:28:12Z jaimepc@gmail.com $`
 
 <!-- {{TOC}} -->
 

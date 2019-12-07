@@ -792,7 +792,11 @@ class XMLSecurityDSig {
             }
             return C14NGeneral($node, $exclusive, $withComments);
         }
-        return $node->C14N($exclusive, $withComments, $arXPath, $prefixList);
+        $element = $node;
+        if ($node instanceof DOMNode && $node->ownerDocument !== NULL && $node->isSameNode($node->ownerDocument->documentElement)) {
+            $element = $node->ownerDocument;
+        }
+        return $element->C14N($exclusive, $withComments, $arXPath, $prefixList);
     }
 
     public function canonicalizeSignedInfo() {

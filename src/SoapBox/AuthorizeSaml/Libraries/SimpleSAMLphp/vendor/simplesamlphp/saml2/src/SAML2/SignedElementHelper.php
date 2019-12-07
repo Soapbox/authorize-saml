@@ -5,8 +5,7 @@
  *
  * Can either be inherited from, or can be used by proxy.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_SignedElementHelper implements SAML2_SignedElement
 {

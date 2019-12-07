@@ -6,6 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    $vendorDir . '/robrichards/xmlseclibs/xmlseclibs.php',
+    $vendorDir . '/simplesamlphp/xmlseclibs/xmlseclibs.php',
     $baseDir . '/lib/_autoload_modules.php',
 );

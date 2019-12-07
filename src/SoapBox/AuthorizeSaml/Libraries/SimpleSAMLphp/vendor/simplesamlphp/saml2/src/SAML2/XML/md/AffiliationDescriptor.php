@@ -3,8 +3,7 @@
 /**
  * Class representing SAML 2 AffiliationDescriptor element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_XML_md_AffiliationDescriptor extends SAML2_SignedElementHelper
 {

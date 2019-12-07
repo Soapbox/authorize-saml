@@ -9,8 +9,7 @@
  * Note that this class currently only handles the simple case - where the
  * subject doesn't contain any sort of subject confirmation requirements.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 abstract class SAML2_SubjectQuery extends SAML2_Request
 {

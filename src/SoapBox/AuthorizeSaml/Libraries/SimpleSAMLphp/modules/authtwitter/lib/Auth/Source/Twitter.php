@@ -7,7 +7,6 @@ require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))) . '/oauth/lib
  *
  * @author Andreas Åkre Solberg, UNINETT AS.
  * @package simpleSAMLphp
- * @version $Id: Twitter.php 3295 2013-11-18 17:22:54Z comel.ah $
  */
 class sspmod_authtwitter_Auth_Source_Twitter extends SimpleSAML_Auth_Source {
 

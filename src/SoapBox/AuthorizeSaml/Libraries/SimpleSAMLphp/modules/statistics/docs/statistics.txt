@@ -8,7 +8,6 @@ The simpleSAMLphp statistics module
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: statistics.txt 3331 2014-01-24 16:35:58Z jaimepc@gmail.com $`
   * Andreas Åkre Solberg <andreas.solberg@uninett.no>
 
 

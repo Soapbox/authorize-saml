@@ -3,8 +3,7 @@
 /**
  * Helper functions for the SAML2 library.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 class SAML2_Utils
 {
