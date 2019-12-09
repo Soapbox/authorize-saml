@@ -1,16 +1,15 @@
 <?php
 
-$config = SimpleSAML_Configuration::getInstance();
-$statconfig = SimpleSAML_Configuration::getConfig('module_statistics.php');
+namespace SimpleSAML\Module\statistics;
 
-sspmod_statistics_AccessCheck::checkAccess($statconfig);
+use SimpleSAML\Configuration;
+use SimpleSAML\Session;
+use Symfony\Component\HttpFoundation\Request;
 
-$aggr = new sspmod_statistics_Aggregator();
-$aggr->loadMetadata();
-$metadata = $aggr->getMetadata();
+$config = Configuration::getInstance();
+$session = Session::getSessionFromRequest();
+$request = Request::createFromGlobals();
 
-
-$t = new SimpleSAML_XHTML_Template($config, 'statistics:statmeta-tpl.php');
-$t->data['metadata'] =  $metadata;
+$controller = new StatisticsController($config, $session);
+$t = $controller->metadata($request);
 $t->show();
-

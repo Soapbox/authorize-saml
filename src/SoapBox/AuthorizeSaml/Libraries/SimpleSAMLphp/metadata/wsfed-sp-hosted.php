@@ -1,11 +1,12 @@
 <?php
+
 /**
- * WS-Federation SP configuration for simpleSAMLphp.
+ * WS-Federation SP configuration for SimpleSAMLphp.
  *
  * Required fields:
  *  - host
  */
 
-$metadata['__DYNAMIC:1__'] = array(
-	'host' => '__DEFAULT__',
-);
+$metadata['__DYNAMIC:1__'] = [
+    'host' => '__DEFAULT__',
+];

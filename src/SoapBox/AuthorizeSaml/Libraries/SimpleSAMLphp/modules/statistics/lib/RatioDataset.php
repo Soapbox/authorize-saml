@@ -1,85 +1,122 @@
 <?php
-/*
+
+namespace SimpleSAML\Module\statistics;
+
+use SimpleSAML\Configuration;
+
+/**
  * @author Andreas Åkre Solberg <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
- * @version $Id: RatioDataset.php 1535 2009-06-23 08:15:13Z andreassolberg $
+ * @package SimpleSAMLphp
  */
-class sspmod_statistics_RatioDataset extends sspmod_statistics_StatDataset {
+class RatioDataset extends StatDataset
+{
+    /**
+     * Constructor
+     *
+     * @param \SimpleSAML\Configuration $statconfig
+     * @param \SimpleSAML\Configuration $ruleconfig
+     * @param string $ruleid
+     * @param string $timeres
+     * @param int $fileslot
+     */
+    public function __construct(Configuration $statconfig, Configuration $ruleconfig, $ruleid, $timeres, $fileslot)
+    {
+        parent::__construct($statconfig, $ruleconfig, $ruleid, $timeres, $fileslot);
+    }
 
-	
-	public function aggregateSummary() {
-		/**
-		 * Aggregate summary table from dataset. To be used in the table view.
-		 */
-		$this->summary = array(); 
-		$noofvalues = array();
-		foreach($this->results AS $slot => $res) {
-			foreach ($res AS $key => $value) {
-				if (array_key_exists($key, $this->summary)) {
-					$this->summary[$key] += $value;
-					if ($value > 0) 
-						$noofvalues[$key]++;
-				} else {
-					$this->summary[$key] = $value;
-					if ($value > 0) 
-						$noofvalues[$key] = 1;
-					else 
-						$noofvalues[$key] = 0;
-				}
-			}
-		}
-		
-		foreach($this->summary AS $key => $val) {
-			$this->summary[$key] = $this->divide($this->summary[$key], $noofvalues[$key]);
-		}
-		
-		asort($this->summary);
-		$this->summary = array_reverse($this->summary, TRUE);
-		// echo '<pre>'; print_r($summaryDataset); exit;
-	}
-	
-	private function ag($k, $a) {
-		if (array_key_exists($k, $a)) return $a[$k];
-		return 0;
-	}
-	
-	private function divide($v1, $v2) {
-		if ($v2 == 0) return 0;
-		return ($v1 / $v2);
-	}
-	
-	public function combine($result1, $result2) {
 
-		
-		$combined = array();
-		
-		foreach($result2 AS $tick => $val) {
-			$combined[$tick] = array();
-			foreach($val AS $index => $num) {
-				$combined[$tick][$index] = $this->divide( 
-					$this->ag($index, $result1[$tick]),
-					$this->ag($index, $result2[$tick])
-				);
-			}
-			
-		}
-		
-		// echo('<pre>');
-		// echo('combine 1 ');
-		// print_r($result1);
-		// echo('combine 2 ');
-		// print_r($result2); 
-		// echo('combineed ');
-		// print_r($combined); 
-		// 
-		// exit;
-		
-		return $combined;
-	}
-	
-	public function getPieData() {
-		return NULL;
-	}
+    /**
+     * @return void
+     */
+    public function aggregateSummary()
+    {
+        /**
+         * Aggregate summary table from dataset. To be used in the table view.
+         */
+        $this->summary = [];
+        $noofvalues = [];
+        foreach ($this->results as $slot => $res) {
+            foreach ($res as $key => $value) {
+                if (array_key_exists($key, $this->summary)) {
+                    $this->summary[$key] += $value;
+                    if ($value > 0) {
+                        $noofvalues[$key]++;
+                    }
+                } else {
+                    $this->summary[$key] = $value;
+                    if ($value > 0) {
+                        $noofvalues[$key] = 1;
+                    } else {
+                        $noofvalues[$key] = 0;
+                    }
+                }
+            }
+        }
 
+        foreach ($this->summary as $key => $val) {
+            $this->summary[$key] = $this->divide($this->summary[$key], $noofvalues[$key]);
+        }
+
+        asort($this->summary);
+        $this->summary = array_reverse($this->summary, true);
+    }
+
+
+    /**
+     * @param string $k
+     * @param array $a
+     * @return int
+     */
+    private function ag($k, array $a)
+    {
+        if (array_key_exists($k, $a)) {
+            return $a[$k];
+        }
+        return 0;
+    }
+
+
+    /**
+     * @param int $v1
+     * @param int $v2
+     * @return int|float
+     */
+    private function divide($v1, $v2)
+    {
+        if ($v2 == 0) {
+            return 0;
+        }
+        return ($v1 / $v2);
+    }
+
+
+    /**
+     * @param array $result1
+     * @param array $result2
+     * @return array
+     */
+    public function combine(array $result1, array $result2)
+    {
+        $combined = [];
+
+        foreach ($result2 as $tick => $val) {
+            $combined[$tick] = [];
+            foreach ($val as $index => $num) {
+                $combined[$tick][$index] = $this->divide(
+                    $this->ag($index, $result1[$tick]),
+                    $this->ag($index, $result2[$tick])
+                );
+            }
+        }
+        return $combined;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getPieData()
+    {
+        return [];
+    }
 }
-

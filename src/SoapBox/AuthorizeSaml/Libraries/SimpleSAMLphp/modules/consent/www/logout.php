@@ -2,25 +2,16 @@
 /**
  * This is the handler for logout started from the consent page.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 
 if (!array_key_exists('StateId', $_GET)) {
-    throw new SimpleSAML_Error_BadRequest('Missing required StateId query parameter.');
+    throw new \SimpleSAML\Error\BadRequest('Missing required StateId query parameter.');
 }
-$id = (string)$_GET['StateId'];
+$state = \SimpleSAML\Auth\State::loadState($_GET['StateId'], 'consent:request');
 
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($id);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
+$state['Responder'] = ['\SimpleSAML\Module\consent\Logout', 'postLogout'];
 
-$state = SimpleSAML_Auth_State::loadState($id, 'consent:request');
-
-$state['Responder'] = array('sspmod_consent_Logout', 'postLogout');
-
-$idp = SimpleSAML_IdP::getByState($state);
-$idp->handleLogoutRequest($state, NULL);
-assert('FALSE');
+$idp = \SimpleSAML\IdP::getByState($state);
+$idp->handleLogoutRequest($state, null);
+throw new \Exception('Should never happen');

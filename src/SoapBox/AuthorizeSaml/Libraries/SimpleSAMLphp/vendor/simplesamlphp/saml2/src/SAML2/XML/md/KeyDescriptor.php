@@ -1,96 +1,178 @@
 <?php
 
+namespace SAML2\XML\md;
+
+use SAML2\Constants;
+use SAML2\Utils;
+use SAML2\XML\Chunk;
+use SAML2\XML\ds\KeyInfo;
+use Webmozart\Assert\Assert;
+
 /**
  * Class representing a KeyDescriptor element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_XML_md_KeyDescriptor
+class KeyDescriptor
 {
     /**
      * What this key can be used for.
      *
-     * 'encryption', 'signing' or NULL.
+     * 'encryption', 'signing' or null.
      *
-     * @var string|NULL
+     * @var string|null
      */
     public $use;
 
     /**
      * The KeyInfo for this key.
      *
-     * @var SAML2_XML_ds_KeyInfo
+     * @var \SAML2\XML\ds\KeyInfo
      */
     public $KeyInfo;
 
     /**
      * Supported EncryptionMethods.
      *
-     * Array of SAML2_XML_Chunk objects.
+     * Array of \SAML2\XML\Chunk objects.
      *
-     * @var SAML2_XML_Chunk[]
+     * @var \SAML2\XML\Chunk[]
      */
-    public $EncryptionMethod = array();
+    public $EncryptionMethod = [];
+
 
     /**
      * Initialize an KeyDescriptor.
      *
-     * @param DOMElement|NULL $xml The XML element we should load.
-     * @throws Exception
+     * @param \DOMElement|null $xml The XML element we should load.
+     * @throws \Exception
      */
-    public function __construct(DOMElement $xml = NULL)
+    public function __construct(\DOMElement $xml = null)
     {
-        if ($xml === NULL) {
+        if ($xml === null) {
             return;
         }
 
         if ($xml->hasAttribute('use')) {
-            $this->use = $xml->getAttribute('use');
+            $this->setUse($xml->getAttribute('use'));
         }
 
-        $keyInfo = SAML2_Utils::xpQuery($xml, './ds:KeyInfo');
+        $keyInfo = Utils::xpQuery($xml, './ds:KeyInfo');
         if (count($keyInfo) > 1) {
-            throw new Exception('More than one ds:KeyInfo in the KeyDescriptor.');
+            throw new \Exception('More than one ds:KeyInfo in the KeyDescriptor.');
         } elseif (empty($keyInfo)) {
-            throw new Exception('No ds:KeyInfo in the KeyDescriptor.');
+            throw new \Exception('No ds:KeyInfo in the KeyDescriptor.');
         }
-        $this->KeyInfo = new SAML2_XML_ds_KeyInfo($keyInfo[0]);
+        $this->setKeyInfo(new KeyInfo($keyInfo[0]));
 
-        foreach (SAML2_Utils::xpQuery($xml, './saml_metadata:EncryptionMethod') as $em) {
-            $this->EncryptionMethod[] = new SAML2_XML_Chunk($em);
+        foreach (Utils::xpQuery($xml, './saml_metadata:EncryptionMethod') as $em) {
+            $this->addEncryptionMethod(new Chunk($em));
         }
-
     }
+
+
+    /**
+     * Collect the value of the use-property
+     * @return string
+     */
+    public function getUse()
+    {
+        return $this->use;
+    }
+
+
+    /**
+     * Set the value of the use-property
+     * @param string|null $use
+     * @return void
+     */
+    public function setUse($use)
+    {
+        Assert::nullOrString($use);
+        $this->use = $use;
+    }
+
+
+    /**
+     * Collect the value of the KeyInfo-property
+     * @return \SAML2\XML\ds\KeyInfo
+     */
+    public function getKeyInfo()
+    {
+        return $this->KeyInfo;
+    }
+
+
+    /**
+     * Set the value of the KeyInfo-property
+     * @param \SAML2\XML\ds\KeyInfo $keyInfo
+     * @return void
+     */
+    public function setKeyInfo(KeyInfo $keyInfo)
+    {
+        $this->KeyInfo = $keyInfo;
+    }
+
+
+    /**
+     * Collect the value of the EncryptionMethod-property
+     * @return \SAML2\XML\Chunk[]
+     */
+    public function getEncryptionMethod()
+    {
+        return $this->EncryptionMethod;
+    }
+
+
+    /**
+     * Set the value of the EncryptionMethod-property
+     * @param \SAML2\XML\Chunk[] $encryptionMethod
+     * @return void
+     */
+    public function setEncryptionMethod(array $encryptionMethod)
+    {
+        $this->EncryptionMethod = $encryptionMethod;
+    }
+
+
+    /**
+     * Add the value to the EncryptionMethod-property
+     * @param \SAML2\XML\Chunk $encryptionMethod
+     * @return void
+     */
+    public function addEncryptionMethod(Chunk $encryptionMethod)
+    {
+        $this->EncryptionMethod[] = $encryptionMethod;
+    }
+
 
     /**
      * Convert this KeyDescriptor to XML.
      *
-     * @param DOMElement $parent The element we should append this KeyDescriptor to.
-     * @return DOMElement
+     * @param \DOMElement $parent The element we should append this KeyDescriptor to.
+     * @return \DOMElement
      */
-    public function toXML(DOMElement $parent)
+    public function toXML(\DOMElement $parent)
     {
-        assert('is_null($this->use) || is_string($this->use)');
-        assert('$this->KeyInfo instanceof SAML2_XML_ds_KeyInfo');
-        assert('is_array($this->EncryptionMethod)');
+        Assert::nullOrString($this->getUse());
+        Assert::isInstanceOf($this->getKeyInfo(), KeyInfo::class);
+        Assert::isArray($this->getEncryptionMethod());
 
         $doc = $parent->ownerDocument;
 
-        $e = $doc->createElementNS(SAML2_Const::NS_MD, 'md:KeyDescriptor');
+        $e = $doc->createElementNS(Constants::NS_MD, 'md:KeyDescriptor');
         $parent->appendChild($e);
 
-        if (isset($this->use)) {
-            $e->setAttribute('use', $this->use);
+        if ($this->getUse() !== null) {
+            $e->setAttribute('use', $this->getUse());
         }
 
-        $this->KeyInfo->toXML($e);
+        $this->getKeyInfo()->toXML($e);
 
-        foreach ($this->EncryptionMethod as $em) {
+        foreach ($this->getEncryptionMethod() as $em) {
             $em->toXML($e);
         }
 
         return $e;
     }
-
 }

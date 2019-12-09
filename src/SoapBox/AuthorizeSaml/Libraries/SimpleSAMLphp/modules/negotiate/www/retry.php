@@ -2,38 +2,33 @@
 
 /**
  *
- *
  * @author Mathias Meisfjordskar, University of Oslo.
  *         <mathias.meisfjordskar@usit.uio.no>
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
+ *
  */
 
-$authStateId = $_REQUEST['AuthState'];
+$state = \SimpleSAML\Auth\State::loadState(
+    $_REQUEST['AuthState'],
+    \SimpleSAML\Module\negotiate\Auth\Source\Negotiate::STAGEID
+);
 
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($authStateId);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
-
-$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_negotiate_Auth_Source_Negotiate::STAGEID);
-
-$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
+$metadata = \SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
 $idpid = $metadata->getMetaDataCurrentEntityID('saml20-idp-hosted', 'metaindex');
 $idpmeta = $metadata->getMetaData($idpid, 'saml20-idp-hosted');
 
 if (isset($idpmeta['auth'])) {
-	$source = SimpleSAML_Auth_Source::getById($idpmeta['auth']);
-	if ($source === NULL)
-		throw new SimpleSAML_Error_BadRequest('Invalid AuthId "' . $idpmeta['auth'] . '" - not found.');
+    $source = \SimpleSAML\Auth\Source::getById($idpmeta['auth']);
+    if ($source === null) {
+        throw new \SimpleSAML\Error\BadRequest('Invalid AuthId "' . $idpmeta['auth'] . '" - not found.');
+    }
 
-	$session = SimpleSAML_Session::getInstance();
-	$session->setData('negotiate:disable', 'session', FALSE, 24*60*60);
-	SimpleSAML_Logger::debug('Negotiate(retry) - session enabled, retrying.');
-	$source->authenticate($state);
-	assert('FALSE');
+    $session = \SimpleSAML\Session::getSessionFromRequest();
+    $session->setData('negotiate:disable', 'session', false, 86400); //24*60*60=86400
+    \SimpleSAML\Logger::debug('Negotiate(retry) - session enabled, retrying.');
+    $source->authenticate($state);
+    assert(false);
 } else {
-	SimpleSAML_Logger::error('Negotiate - retry - no "auth" parameter found in IdP metadata.');
-	assert('FALSE');
+    \SimpleSAML\Logger::error('Negotiate - retry - no "auth" parameter found in IdP metadata.');
+    assert(false);
 }

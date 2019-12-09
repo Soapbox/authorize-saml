@@ -3,68 +3,83 @@
 /**
  * This page shows a list of authentication sources. When the user selects
  * one of them if pass this information to the
- * sspmod_multiauth_Auth_Source_MultiAuth class and call the
+ * \SimpleSAML\Module\multiauth\Auth\Source\MultiAuth class and call the
  * delegateAuthentication method on it.
  *
  * @author Lorenzo Gil, Yaco Sistemas S.L.
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
 
+// Retrieve the authentication state
 if (!array_key_exists('AuthState', $_REQUEST)) {
-	throw new SimpleSAML_Error_BadRequest('Missing AuthState parameter.');
+    throw new \SimpleSAML\Error\BadRequest('Missing AuthState parameter.');
 }
 $authStateId = $_REQUEST['AuthState'];
 
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($authStateId);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-}
+/** @var array $state */
+$state = \SimpleSAML\Auth\State::loadState($authStateId, \SimpleSAML\Module\multiauth\Auth\Source\MultiAuth::STAGEID);
 
-/* Retrieve the authentication state. */
-$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_multiauth_Auth_Source_MultiAuth::STAGEID);
-
-if (array_key_exists("SimpleSAML_Auth_Default.id", $state)) {
-	$authId = $state["SimpleSAML_Auth_Default.id"];
-	$as = SimpleSAML_Auth_Source::getById($authId);
+if (array_key_exists("\SimpleSAML\Auth\Source.id", $state)) {
+    $authId = $state["\SimpleSAML\Auth\Source.id"];
+    /** @var \SimpleSAML\Module\multiauth\Auth\Source\MultiAuth $as */
+    $as = \SimpleSAML\Auth\Source::getById($authId);
 } else {
-	$as = NULL;
+    $as = null;
 }
 
-$source = NULL;
+$source = null;
 if (array_key_exists('source', $_REQUEST)) {
-	$source = $_REQUEST['source'];
+    $source = $_REQUEST['source'];
 } else {
-	foreach ($_REQUEST as $k => $v) {
-		$k = explode('-', $k, 2);
-		if (count($k) === 2 && $k[0] === 'src') {
-			$source = base64_decode($k[1]);
-		}
-	}
+    foreach ($_REQUEST as $k => $v) {
+        $k = explode('-', $k, 2);
+        if (count($k) === 2 && $k[0] === 'src') {
+            $source = base64_decode($k[1]);
+        }
+    }
 }
-if ($source !== NULL) {
-	if ($as !== NULL) {
-		$as->setPreviousSource($source);
-	}
-	sspmod_multiauth_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
+if ($source !== null) {
+    if ($as !== null) {
+        $as->setPreviousSource($source);
+    }
+    \SimpleSAML\Module\multiauth\Auth\Source\MultiAuth::delegateAuthentication($source, $state);
 }
 
 if (array_key_exists('multiauth:preselect', $state)) {
-	$source = $state['multiauth:preselect'];
-	sspmod_multiauth_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
+    $source = $state['multiauth:preselect'];
+    \SimpleSAML\Module\multiauth\Auth\Source\MultiAuth::delegateAuthentication($source, $state);
 }
 
-$globalConfig = SimpleSAML_Configuration::getInstance();
-$t = new SimpleSAML_XHTML_Template($globalConfig, 'multiauth:selectsource.php');
+$globalConfig = \SimpleSAML\Configuration::getInstance();
+$t = new \SimpleSAML\XHTML\Template($globalConfig, 'multiauth:selectsource.tpl.php');
+
+$defaultLanguage = $globalConfig->getString('language.default', 'en');
+$language = $t->getTranslator()->getLanguage()->getLanguage();
+
+$sources = $state[\SimpleSAML\Module\multiauth\Auth\Source\MultiAuth::SOURCESID];
+foreach ($sources as $key => $source) {
+    $sources[$key]['source64'] = base64_encode($sources[$key]['source']);
+    if (isset($sources[$key]['text'][$language])) {
+        $sources[$key]['text'] = $sources[$key]['text'][$language];
+    } else {
+        $sources[$key]['text'] = $sources[$key]['text'][$defaultLanguage];
+    }
+
+    if (isset($sources[$key]['help'][$language])) {
+        $sources[$key]['help'] = $sources[$key]['help'][$language];
+    } else {
+        $sources[$key]['help'] = $sources[$key]['help'][$defaultLanguage];
+    }
+}
+
 $t->data['authstate'] = $authStateId;
-$t->data['sources'] = $state[sspmod_multiauth_Auth_Source_MultiAuth::SOURCESID];
-if ($as !== NULL) {
-	$t->data['preferred'] = $as->getPreviousSource();
+$t->data['sources'] = $sources;
+$t->data['selfUrl'] = $_SERVER['PHP_SELF'];
+
+if ($as !== null) {
+    $t->data['preferred'] = $as->getPreviousSource();
 } else {
-	$t->data['preferred'] = NULL;
+    $t->data['preferred'] = null;
 }
 $t->show();
 exit();
-
-?>

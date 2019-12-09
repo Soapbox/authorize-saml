@@ -1,5 +1,9 @@
 <?php
 
+namespace SAML2;
+
+use Webmozart\Assert\Assert;
+
 /**
  * Class for SAML 2 attribute query messages.
  *
@@ -13,10 +17,9 @@
  * - If an attribute contains any attribute values, only the attribute values
  *   which match those in the query should be returned.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_AttributeQuery extends SAML2_SubjectQuery
+class AttributeQuery extends SubjectQuery
 {
     /**
      * The attributes, as an associative array.
@@ -35,56 +38,58 @@ class SAML2_AttributeQuery extends SAML2_SubjectQuery
      */
     private $nameFormat;
 
+
     /**
      * Constructor for SAML 2 attribute query messages.
      *
-     * @param DOMElement|NULL $xml The input message.
-     * @throws Exception
+     * @param \DOMElement|null $xml The input message.
+     * @throws \Exception
      */
-    public function __construct(DOMElement $xml = NULL)
+    public function __construct(\DOMElement $xml = null)
     {
         parent::__construct('AttributeQuery', $xml);
 
-        $this->attributes = array();
-        $this->nameFormat = SAML2_Const::NAMEFORMAT_UNSPECIFIED;
+        $this->attributes = [];
+        $this->nameFormat = Constants::NAMEFORMAT_UNSPECIFIED;
 
-        if ($xml === NULL) {
+        if ($xml === null) {
             return;
         }
 
-        $firstAttribute = TRUE;
-        $attributes = SAML2_Utils::xpQuery($xml, './saml_assertion:Attribute');
+        $firstAttribute = true;
+        $attributes = Utils::xpQuery($xml, './saml_assertion:Attribute');
         foreach ($attributes as $attribute) {
             if (!$attribute->hasAttribute('Name')) {
-                throw new Exception('Missing name on <saml:Attribute> element.');
+                throw new \Exception('Missing name on <saml:Attribute> element.');
             }
             $name = $attribute->getAttribute('Name');
 
             if ($attribute->hasAttribute('NameFormat')) {
                 $nameFormat = $attribute->getAttribute('NameFormat');
             } else {
-                $nameFormat = SAML2_Const::NAMEFORMAT_UNSPECIFIED;
+                $nameFormat = Constants::NAMEFORMAT_UNSPECIFIED;
             }
 
             if ($firstAttribute) {
                 $this->nameFormat = $nameFormat;
-                $firstAttribute = FALSE;
+                $firstAttribute = false;
             } else {
                 if ($this->nameFormat !== $nameFormat) {
-                    $this->nameFormat = SAML2_Const::NAMEFORMAT_UNSPECIFIED;
+                    $this->nameFormat = Constants::NAMEFORMAT_UNSPECIFIED;
                 }
             }
 
             if (!array_key_exists($name, $this->attributes)) {
-                $this->attributes[$name] = array();
+                $this->attributes[$name] = [];
             }
 
-            $values = SAML2_Utils::xpQuery($attribute, './saml_assertion:AttributeValue');
+            $values = Utils::xpQuery($attribute, './saml_assertion:AttributeValue');
             foreach ($values as $value) {
                 $this->attributes[$name][] = trim($value->textContent);
             }
         }
     }
+
 
     /**
      * Retrieve all requested attributes.
@@ -96,15 +101,18 @@ class SAML2_AttributeQuery extends SAML2_SubjectQuery
         return $this->attributes;
     }
 
+
     /**
      * Set all requested attributes.
      *
      * @param array $attributes All requested attributes, as an associative array.
+     * @return void
      */
     public function setAttributes(array $attributes)
     {
         $this->attributes = $attributes;
     }
+
 
     /**
      * Retrieve the NameFormat used on all attributes.
@@ -119,33 +127,36 @@ class SAML2_AttributeQuery extends SAML2_SubjectQuery
         return $this->nameFormat;
     }
 
+
     /**
      * Set the NameFormat used on all attributes.
      *
      * @param string $nameFormat The NameFormat used on all attributes.
+     * @return void
      */
     public function setAttributeNameFormat($nameFormat)
     {
-        assert('is_string($nameFormat)');
+        Assert::string($nameFormat);
 
         $this->nameFormat = $nameFormat;
     }
 
+
     /**
      * Convert the attribute query message to an XML element.
      *
-     * @return DOMElement This attribute query.
+     * @return \DOMElement This attribute query.
      */
     public function toUnsignedXML()
     {
         $root = parent::toUnsignedXML();
 
         foreach ($this->attributes as $name => $values) {
-            $attribute = $root->ownerDocument->createElementNS(SAML2_Const::NS_SAML, 'saml:Attribute');
+            $attribute = $root->ownerDocument->createElementNS(Constants::NS_SAML, 'saml:Attribute');
             $root->appendChild($attribute);
             $attribute->setAttribute('Name', $name);
 
-            if ($this->nameFormat !== SAML2_Const::NAMEFORMAT_UNSPECIFIED) {
+            if ($this->nameFormat !== Constants::NAMEFORMAT_UNSPECIFIED) {
                 $attribute->setAttribute('NameFormat', $this->nameFormat);
             }
 
@@ -155,17 +166,16 @@ class SAML2_AttributeQuery extends SAML2_SubjectQuery
                 } elseif (is_int($value)) {
                     $type = 'xs:integer';
                 } else {
-                    $type = NULL;
+                    $type = null;
                 }
 
-                $attributeValue = SAML2_Utils::addString($attribute, SAML2_Const::NS_SAML, 'saml:AttributeValue', $value);
-                if ($type !== NULL) {
-                    $attributeValue->setAttributeNS(SAML2_Const::NS_XSI, 'xsi:type', $type);
+                $attributeValue = Utils::addString($attribute, Constants::NS_SAML, 'saml:AttributeValue', strval($value));
+                if ($type !== null) {
+                    $attributeValue->setAttributeNS(Constants::NS_XSI, 'xsi:type', $type);
                 }
             }
         }
 
         return $root;
     }
-
 }

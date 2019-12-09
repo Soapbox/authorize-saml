@@ -3,44 +3,51 @@
 /**
  * Handle linkback() response from Facebook.
  */
- 
-if (!array_key_exists('AuthState', $_REQUEST) || empty($_REQUEST['AuthState'])) {
-	throw new SimpleSAML_Error_BadRequest('Missing state parameter on facebook linkback endpoint.');
+
+// For backwards compatability look for AuthState first
+if (array_key_exists('AuthState', $_REQUEST) && !empty($_REQUEST['AuthState'])) {
+    $state = \SimpleSAML\Auth\State::loadState(
+        $_REQUEST['AuthState'],
+        \SimpleSAML\Module\authfacebook\Auth\Source\Facebook::STAGE_INIT
+    );
+} elseif (array_key_exists('state', $_REQUEST) && !empty($_REQUEST['state'])) {
+    $state = \SimpleSAML\Auth\State::loadState(
+        $_REQUEST['state'],
+        \SimpleSAML\Module\authfacebook\Auth\Source\Facebook::STAGE_INIT
+    );
+} else {
+    throw new \SimpleSAML\Error\BadRequest('Missing state parameter on facebook linkback endpoint.');
 }
 
-$stateID = $_REQUEST['AuthState'];
-
-// sanitize the input
-$sid = SimpleSAML_Utilities::parseStateID($stateID);
-if (!is_null($sid['url'])) {
-	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+// Find authentication source
+if (is_null($state) || !array_key_exists(\SimpleSAML\Module\authfacebook\Auth\Source\Facebook::AUTHID, $state)) {
+    throw new \SimpleSAML\Error\BadRequest(
+        'No data in state for ' . \SimpleSAML\Module\authfacebook\Auth\Source\Facebook::AUTHID
+    );
 }
+$sourceId = $state[\SimpleSAML\Module\authfacebook\Auth\Source\Facebook::AUTHID];
 
-$state = SimpleSAML_Auth_State::loadState($stateID, sspmod_authfacebook_Auth_Source_Facebook::STAGE_INIT);
-
-/* Find authentication source. */
-if (!array_key_exists(sspmod_authfacebook_Auth_Source_Facebook::AUTHID, $state)) {
-	throw new SimpleSAML_Error_BadRequest('No data in state for ' . sspmod_authfacebook_Auth_Source_Facebook::AUTHID);
-}
-$sourceId = $state[sspmod_authfacebook_Auth_Source_Facebook::AUTHID];
-
-$source = SimpleSAML_Auth_Source::getById($sourceId);
-if ($source === NULL) {
-	throw new SimpleSAML_Error_BadRequest('Could not find authentication source with id ' . var_export($sourceId, TRUE));
+/** @var \SimpleSAML\Module\authfacebook\Auth\Source\Facebook|null $source */
+$source = \SimpleSAML\Auth\Source::getById($sourceId);
+if ($source === null) {
+    throw new \SimpleSAML\Error\BadRequest(
+        'Could not find authentication source with id ' . var_export($sourceId, true)
+    );
 }
 
 try {
-	if (isset($_REQUEST['error_reason']) && $_REQUEST['error_reason'] == 'user_denied') {
-		throw new SimpleSAML_Error_UserAborted();
-	}
+    if (isset($_REQUEST['error_reason']) && $_REQUEST['error_reason'] == 'user_denied') {
+        throw new \SimpleSAML\Error\UserAborted();
+    }
 
-	$source->finalStep($state);
-} catch (SimpleSAML_Error_Exception $e) {
-	SimpleSAML_Auth_State::throwException($state, $e);
-} catch (Exception $e) {
-	SimpleSAML_Auth_State::throwException($state, new SimpleSAML_Error_AuthSource($sourceId, 'Error on facebook linkback endpoint.', $e));
+    $source->finalStep($state);
+} catch (\SimpleSAML\Error\Exception $e) {
+    \SimpleSAML\Auth\State::throwException($state, $e);
+} catch (\Exception $e) {
+    \SimpleSAML\Auth\State::throwException(
+        $state,
+        new \SimpleSAML\Error\AuthSource($sourceId, 'Error on facebook linkback endpoint.', $e)
+    );
 }
 
-SimpleSAML_Auth_Source::completeAuth($state);
-
-?>
+\SimpleSAML\Auth\Source::completeAuth($state);

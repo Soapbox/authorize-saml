@@ -1,53 +1,89 @@
 <?php
 
 /**
- * The Shibboleth 1.3 Authentication Request. Not part of SAML 1.1, 
+ * The Shibboleth 1.3 Authentication Request. Not part of SAML 1.1,
  * but an extension using query paramters no XML.
  *
- * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
- * @package simpleSAMLphp
- * @version $Id: AuthnRequest.php 2070 2010-01-05 10:19:28Z olavmrk $
+ * @author Andreas Ã…kre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
+ * @package SimpleSAMLphp
+ * @deprecated This class will be removed in a future release
  */
-class SimpleSAML_XML_Shib13_AuthnRequest {
 
-	private $issuer = null;
-	private $relayState = null;
+namespace SimpleSAML\XML\Shib13;
 
-	public function setRelayState($relayState) {
-		$this->relayState = $relayState;
-	}
-	
-	public function getRelayState() {
-		return $this->relayState;
-	}
-	
-	public function setIssuer($issuer) {
-		$this->issuer = $issuer;
-	}
-	public function getIssuer() {
-		return $this->issuer;
-	}
+use SimpleSAML\Metadata\MetaDataStorageHandler;
 
-	public function createRedirect($destination, $shire = NULL) {
-		$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
-		$idpmetadata = $metadata->getMetaDataConfig($destination, 'shib13-idp-remote');
+class AuthnRequest
+{
+    /** @var string|null */
+    private $issuer = null;
 
-		if ($shire === NULL) {
-			$shire = $metadata->getGenerated('AssertionConsumerService', 'shib13-sp-hosted');
-		}
+    /** @var string|null */
+    private $relayState = null;
 
-		$desturl = $idpmetadata->getDefaultEndpoint('SingleSignOnService', array('urn:mace:shibboleth:1.0:profiles:AuthnRequest'));
-		$desturl = $desturl['Location'];
 
-		$target = $this->getRelayState();
-		
-		$url = $desturl . '?' .
-	    	'providerId=' . urlencode($this->getIssuer()) .
-		    '&shire=' . urlencode($shire) .
-		    (isset($target) ? '&target=' . urlencode($target) : '');
-		return $url;
-	}
+    /**
+     * @param string|null $relayState
+     * @return void
+     */
+    public function setRelayState($relayState)
+    {
+        $this->relayState = $relayState;
+    }
+    
 
+    /**
+     * @return string|null
+     */
+    public function getRelayState()
+    {
+        return $this->relayState;
+    }
+    
+
+    /**
+     * @param string|null $issuer
+     * @return void
+     */
+    public function setIssuer($issuer)
+    {
+        $this->issuer = $issuer;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getIssuer()
+    {
+        return $this->issuer;
+    }
+
+
+    /**
+     * @param string $destination
+     * @param string $shire
+     * @return string
+     */
+    public function createRedirect($destination, $shire)
+    {
+        $metadata = MetaDataStorageHandler::getMetadataHandler();
+        $idpmetadata = $metadata->getMetaDataConfig($destination, 'shib13-idp-remote');
+
+        $desturl = $idpmetadata->getDefaultEndpoint(
+            'SingleSignOnService',
+            ['urn:mace:shibboleth:1.0:profiles:AuthnRequest']
+        );
+        $desturl = $desturl['Location'];
+
+        $target = $this->getRelayState();
+        $issuer = $this->getIssuer();
+        assert($issuer !== null);
+
+        $url = $desturl . '?' .
+            'providerId=' . urlencode($issuer) .
+            '&shire=' . urlencode($shire) .
+            (isset($target) ? '&target=' . urlencode($target) : '');
+        return $url;
+    }
 }
-
-?>

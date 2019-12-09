@@ -1,12 +1,17 @@
 <?php
 
+namespace SAML2\XML\md;
+
+use SAML2\Constants;
+use SAML2\Utils;
+use Webmozart\Assert\Assert;
+
 /**
  * Class representing SAML 2 metadata AdditionalMetadataLocation element.
  *
- * @package simpleSAMLphp
- * @version $Id$
+ * @package SimpleSAMLphp
  */
-class SAML2_XML_md_AdditionalMetadataLocation
+class AdditionalMetadataLocation
 {
     /**
      * The namespace of this metadata.
@@ -22,41 +27,86 @@ class SAML2_XML_md_AdditionalMetadataLocation
      */
     public $location;
 
+
     /**
      * Initialize an AdditionalMetadataLocation element.
      *
-     * @param DOMElement|NULL $xml The XML element we should load.
-     * @throws Exception
+     * @param \DOMElement|null $xml The XML element we should load.
+     * @throws \Exception
      */
-    public function __construct(DOMElement $xml = NULL)
+    public function __construct(\DOMElement $xml = null)
     {
-        if ($xml === NULL) {
+        if ($xml === null) {
             return;
         }
 
         if (!$xml->hasAttribute('namespace')) {
-            throw new Exception('Missing namespace attribute on AdditionalMetadataLocation element.');
+            throw new \Exception('Missing namespace attribute on AdditionalMetadataLocation element.');
         }
-        $this->namespace = $xml->getAttribute('namespace');
+        $this->setNamespace($xml->getAttribute('namespace'));
 
-        $this->location = $xml->textContent;
+        $this->setLocation($xml->textContent);
     }
+
+
+    /**
+     * Collect the value of the namespace-property
+     * @return string
+     */
+    public function getNamespace()
+    {
+        return $this->namespace;
+    }
+
+
+    /**
+     * Set the value of the namespace-property
+     * @param string $namespace
+     * @return void
+     */
+    public function setNamespace($namespace)
+    {
+        Assert::string($namespace);
+        $this->namespace = $namespace;
+    }
+
+
+    /**
+     * Collect the value of the location-property
+     * @return string
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+
+    /**
+     * Set the value of the location-property
+     * @param string $location
+     * @return void
+     */
+    public function setLocation($location)
+    {
+        Assert::string($location);
+        $this->location = $location;
+    }
+
 
     /**
      * Convert this AdditionalMetadataLocation to XML.
      *
-     * @param  DOMElement $parent The element we should append to.
-     * @return DOMElement This AdditionalMetadataLocation-element.
+     * @param  \DOMElement $parent The element we should append to.
+     * @return \DOMElement This AdditionalMetadataLocation-element.
      */
-    public function toXML(DOMElement $parent)
+    public function toXML(\DOMElement $parent)
     {
-        assert('is_string($this->namespace)');
-        assert('is_string($this->location)');
+        Assert::string($this->getNamespace());
+        Assert::string($this->getLocation());
 
-        $e = SAML2_Utils::addString($parent, SAML2_Const::NS_MD, 'md:AdditionalMetadataLocation', $this->location);
-        $e->setAttribute('namespace', $this->namespace);
+        $e = Utils::addString($parent, Constants::NS_MD, 'md:AdditionalMetadataLocation', $this->getLocation());
+        $e->setAttribute('namespace', $this->getNamespace());
 
         return $e;
     }
-
 }
