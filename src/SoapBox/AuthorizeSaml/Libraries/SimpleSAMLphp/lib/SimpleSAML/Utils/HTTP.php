@@ -88,7 +88,18 @@ class HTTP
      */
     public static function getServerHTTPS()
     {
-        return true;
+        if (!array_key_exists('HTTPS', $_SERVER)) {
+            // not an https-request
+            return false;
+        }
+
+        if ($_SERVER['HTTPS'] === 'off') {
+            // IIS with HTTPS off
+            return false;
+        }
+
+        // otherwise, HTTPS will be non-empty
+        return !empty($_SERVER['HTTPS']);
     }
 
 
@@ -102,6 +113,15 @@ class HTTP
      */
     public static function getServerPort()
     {
+        $default_port = self::getServerHTTPS() ? '443' : '80';
+        $port = isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : $default_port;
+
+        // Take care of edge-case where SERVER_PORT is an integer
+        $port = strval($port);
+
+        if ($port !== $default_port) {
+            return ':' . $port;
+        }
         return '';
     }
 
@@ -888,7 +908,7 @@ class HTTP
      */
     public static function isHTTPS()
     {
-        return true;
+        return strpos(self::getSelfURL(), 'https://') === 0;
     }
 
 
