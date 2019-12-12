@@ -17,7 +17,7 @@ $config = [
 
     /*
      * baseurlpath is a *URL path* (not a filesystem path).
-     * A valid format for 'baseurlpath' is:
+     * A valid format for 'baseurlpath' => SoapBox\AuthorizeSaml\SamlStrategy::$settings['baseurlpath'],
      * [(http|https)://(hostname|fqdn)[:port]]/[path/to/simplesaml/]
      *
      * The full url format is useful if your SimpleSAMLphp setup is hosted behind
@@ -27,7 +27,7 @@ $config = [
      * external url, no matter where you come from (direct access or via the
      * reverse proxy).
      */
-    'baseurlpath' => 'simplesaml/',
+    'baseurlpath' => SoapBox\AuthorizeSaml\SamlStrategy::$settings['baseurlpath'],
 
     /*
      * The 'application' configuration array groups a set configuration options
@@ -54,7 +54,7 @@ $config = [
     /*
      * The following settings are *filesystem paths* which define where
      * SimpleSAMLphp can find or write the following things:
-     * - 'certdir': The base directory for certificate and key material.
+     * - 'certdir' => SoapBox\AuthorizeSaml\SamlStrategy::$settings['certdir'],
      * - 'loggingdir': Where to write logs.
      * - 'datadir': Storage of general data.
      * - 'tempdir': Saving temporary files. SimpleSAMLphp will attempt to create
@@ -62,7 +62,7 @@ $config = [
      * When specified as a relative path, this is relative to the SimpleSAMLphp
      * root directory.
      */
-    'certdir' => 'cert/',
+    'certdir' => SoapBox\AuthorizeSaml\SamlStrategy::$settings['certdir'],
     'loggingdir' => 'log/',
     'datadir' => 'data/',
     'tempdir' => '/tmp/simplesaml',
@@ -72,8 +72,8 @@ $config = [
      * The email address will be used as the recipient address for error reports, and
      * also as the technical contact in generated metadata.
      */
-    'technicalcontact_name' => 'Administrator',
-    'technicalcontact_email' => 'na@example.org',
+    'technicalcontact_name' => 'SoapBox Support Team',
+    'technicalcontact_email' => 'support@soapboxhq.com',
 
     /*
      * (Optional) The method by which email is delivered.  Defaults to mail which utilizes the
@@ -114,7 +114,7 @@ $config = [
      *
      * See this page for a list of valid timezones: http://php.net/manual/en/timezones.php
      */
-    'timezone' => null,
+    'timezone' => 'America/Toronto',
 
 
 
@@ -125,12 +125,12 @@ $config = [
     /*
      * This is a secret salt used by SimpleSAMLphp when it needs to generate a secure hash
      * of a value. It must be changed from its default value to a secret value. The value of
-     * 'secretsalt' can be any valid string of any length.
+     * 'secretsalt' => 'adtlobgw88fnemsmlq3cz0enq3csklhl',
      *
      * A possible way to generate a random salt is by running the following command from a unix shell:
      * LC_CTYPE=C tr -c -d '0123456789abcdefghijklmnopqrstuvwxyz' </dev/urandom | dd bs=32 count=1 2>/dev/null;echo
      */
-    'secretsalt' => 'defaultsecretsalt',
+    'secretsalt' => 'adtlobgw88fnemsmlq3cz0enq3csklhl',
 
     /*
      * This password must be kept secret, and modified from the default value 123.
@@ -138,13 +138,13 @@ $config = [
      * metadata listing and diagnostics pages.
      * You can also put a hash here; run "bin/pwgen.php" to generate one.
      */
-    'auth.adminpassword' => '123',
+    'auth.adminpassword' => '200YearsAgoInAPlaceFarAway!',
 
     /*
      * Set this options to true if you want to require administrator password to access the web interface
      * or the metadata pages, respectively.
      */
-    'admin.protectindexpage' => false,
+    'admin.protectindexpage' => true,
     'admin.protectmetadata' => false,
 
     /*
@@ -161,7 +161,7 @@ $config = [
      * parameters obtained from the $_REQUEST array).
      *
      * SimpleSAMLphp will automatically add your own domain (either by checking
-     * it dynamically, or by using the domain defined in the 'baseurlpath'
+     * it dynamically, or by using the domain defined in the 'baseurlpath' => SoapBox\AuthorizeSaml\SamlStrategy::$settings['baseurlpath'],
      * directive, the latter having precedence) to the list of trusted domains,
      * in case this option is NOT set to NULL. In that case, you are explicitly
      * telling SimpleSAMLphp to verify URLs.
@@ -260,7 +260,7 @@ $config = [
      * to the browser.
      *
      * When 'errorreporting' is enabled, a form will be presented for the user to report
-     * the error to 'technicalcontact_email'.
+     * the error to 'technicalcontact_email' => 'support@soapboxhq.com',
      */
     'showerrors' => true,
     'errorreporting' => true,
@@ -504,7 +504,7 @@ $config = [
      * This value is the duration of the session in seconds. Make sure that the time duration of
      * cookies both at the SP and the IdP exceeds this duration.
      */
-    'session.duration' => 8 * (60 * 60), // 8 hours.
+    'session.duration' => 24 * (60 * 60),
 
     /*
      * Sets the duration, in seconds, data should be stored in the datastore. As the data store is used for
@@ -529,9 +529,9 @@ $config = [
      * Defaults to 0, which means that the cookie expires when the browser is closed.
      *
      * Example:
-     *  'session.cookie.lifetime' => 30*60,
+     *  'session.cookie.lifetime' => 20 * (60 * 60),
      */
-    'session.cookie.lifetime' => 0,
+    'session.cookie.lifetime' => 20 * (60 * 60),
 
     /*
      * Limit the path of the cookies.
@@ -590,10 +590,10 @@ $config = [
      * Options for remember me feature for IdP sessions. Remember me feature
      * has to be also implemented in authentication source used.
      *
-     * Option 'session.cookie.lifetime' should be set to zero (0), i.e. cookie
+     * Option 'session.cookie.lifetime' => 20 * (60 * 60),
      * expires on browser session if remember me is not checked.
      *
-     * Session duration ('session.duration' option) should be set according to
+     * Session duration ('session.duration' => 24 * (60 * 60),
      * 'session.rememberme.lifetime' option.
      *
      * It's advised to use remember me feature with session checking function
@@ -690,7 +690,7 @@ $config = [
      * The time will be reset every time the data is written to the
      * memcache servers.
      *
-     * This value should always be larger than the 'session.duration'
+     * This value should always be larger than the 'session.duration' => 24 * (60 * 60),
      * option. Not doing this may result in the session being deleted from
      * the memcache servers while it is still in use.
      *
@@ -1143,7 +1143,7 @@ $config = [
      *
      * The default datastore is 'phpsession'.
      */
-    'store.type'                    => 'phpsession',
+    'store.type' => SoapBox\AuthorizeSaml\SamlStrategy::$session['type'],
 
     /*
      * The DSN the sql datastore should connect to.
@@ -1151,18 +1151,18 @@ $config = [
      * See http://www.php.net/manual/en/pdo.drivers.php for the various
      * syntaxes.
      */
-    'store.sql.dsn'                 => 'sqlite:/path/to/sqlitedatabase.sq3',
+    'store.sql.dsn' => SoapBox\AuthorizeSaml\SamlStrategy::$session['dsn'],
 
     /*
      * The username and password to use when connecting to the database.
      */
-    'store.sql.username' => null,
-    'store.sql.password' => null,
+    'store.sql.username' => SoapBox\AuthorizeSaml\SamlStrategy::$session['username'],
+    'store.sql.password' => SoapBox\AuthorizeSaml\SamlStrategy::$session['password'],
 
     /*
      * The prefix we should use on our tables.
      */
-    'store.sql.prefix' => 'SimpleSAMLphp',
+    'store.sql.prefix' => SoapBox\AuthorizeSaml\SamlStrategy::$session['prefix'],
 
     /*
      * The hostname and port of the Redis datastore instance.

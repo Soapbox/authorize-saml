@@ -2,24 +2,25 @@
 
 namespace SimpleSAML\Module\saml;
 
-use RobRichards\XMLSecLibs\XMLSecurityKey;
-use SAML2\Assertion;
-use SAML2\AuthnRequest;
-use SAML2\Constants;
-use SAML2\EncryptedAssertion;
-use SAML2\LogoutRequest;
-use SAML2\LogoutResponse;
 use SAML2\Response;
+use SAML2\Assertion;
+use SAML2\Constants;
+use SimpleSAML\Utils;
+use SimpleSAML\Logger;
+use SAML2\AuthnRequest;
+use SAML2\LogoutRequest;
 use SAML2\SignedElement;
+use SAML2\LogoutResponse;
 use SAML2\StatusResponse;
 use SAML2\XML\ds\KeyInfo;
-use SAML2\XML\ds\X509Certificate;
 use SAML2\XML\ds\X509Data;
 use SAML2\XML\saml\Issuer;
+use SAML2\EncryptedAssertion;
 use SimpleSAML\Configuration;
+use SAML2\XML\ds\X509Certificate;
 use SimpleSAML\Error as SSP_Error;
-use SimpleSAML\Logger;
-use SimpleSAML\Utils;
+use SoapBox\AuthorizeSaml\SamlStrategy;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 /**
  * Common code for building SAML 2 messages based on the available metadata.
@@ -93,7 +94,6 @@ class Message
         Configuration $dstMetadata,
         \SAML2\Message $message
     ) {
-
         $signingEnabled = null;
         if ($message instanceof LogoutRequest || $message instanceof LogoutResponse) {
             $signingEnabled = $srcMetadata->getBoolean('sign.logout', null);
@@ -617,7 +617,7 @@ class Message
         }
 
         // validate Response-element destination
-        $currentURL = Utils\HTTP::getSelfURLNoQuery();
+        $currentURL = SamlStrategy::$urls['acs'];
         $msgDestination = $response->getDestination();
         if ($msgDestination !== null && $msgDestination !== $currentURL) {
             throw new \Exception('Destination in response doesn\'t match the current URL. Destination is "' .
@@ -679,7 +679,7 @@ class Message
             }
         } // at least one valid signature found
 
-        $currentURL = Utils\HTTP::getSelfURLNoQuery();
+        $currentURL = SamlStrategy::$urls['acs'];
 
         // check various properties of the assertion
         $config = Configuration::getInstance();
@@ -911,7 +911,6 @@ class Message
      */
     public static function getEncryptionKey(Configuration $metadata)
     {
-
         $sharedKey = $metadata->getString('sharedkey', null);
         if ($sharedKey !== null) {
             $key = new XMLSecurityKey(XMLSecurityKey::AES128_CBC);
